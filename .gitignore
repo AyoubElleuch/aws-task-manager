@@ -1,0 +1,11 @@
+node_modules/
+.npm-cache/
+dist/
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfplan
+.env
+.env.*
+!.env.example
