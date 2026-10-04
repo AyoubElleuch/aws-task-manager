@@ -1,6 +1,6 @@
 output "health_url" {
-    description = "URL for the health check endpoint"
-    value = "${aws_apigatewayv2_api.task_manager.api_endpoint}/health"
+  description = "URL for the health check endpoint"
+  value       = "${aws_apigatewayv2_api.task_manager.api_endpoint}/health"
 }
 
 output "frontend_bucket_name" {
