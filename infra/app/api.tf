@@ -1,6 +1,22 @@
 resource "aws_apigatewayv2_api" "task_manager" {
   name          = "aws-task-manager-api"
   protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = [
+      "https://${aws_cloudfront_distribution.frontend.domain_name}",
+      "http://localhost:3000",
+    ]
+
+    allow_methods = [
+      "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+    ]
+
+    allow_headers = [
+      "content-type",
+      "authorization"
+    ]
+  }
 }
 
 resource "aws_apigatewayv2_integration" "health" {
@@ -28,9 +44,4 @@ resource "aws_lambda_permission" "health_api" {
   function_name = aws_lambda_function.health.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.task_manager.execution_arn}/*/GET/health"
-}
-
-output "health_url" {
-  description = "Public health endpoint URL"
-  value       = "${aws_apigatewayv2_api.task_manager.api_endpoint}/health"
 }
