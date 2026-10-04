@@ -42,3 +42,4 @@ tfplan
 *.tfplan
 *.tfvars
 *.tfvars.json
+infra/app/*.zip
