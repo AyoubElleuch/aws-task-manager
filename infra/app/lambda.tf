@@ -1,13 +1,3 @@
-data "archive_file" "health" {
-  type        = "zip"
-  output_path = "${path.module}/health.zip"
-
-  source {
-    content  = file("${path.module}/../../backend/dist/main.js")
-    filename = "main.mjs"
-  }
-}
-
 resource "aws_lambda_function" "health" {
   function_name = "aws-task-manager-health"
   runtime       = "nodejs22.x"
