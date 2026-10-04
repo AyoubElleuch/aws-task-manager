@@ -1,0 +1,18 @@
+{
+  "name": "aws-task-manager-backend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint src tests",
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.163",
+    "@types/node": "^22.20.4",
+    "oxlint": "^1.85.0",
+    "typescript": "~6.0.2",
+    "vitest": "^5.0.2"
+  }
+}
