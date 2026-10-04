@@ -1,36 +1,36 @@
 resource "aws_cognito_user_pool" "app" {
-    name = "aws-task-manager"
-    user_pool_tier = "LITE"
+  name           = "aws-task-manager"
+  user_pool_tier = "LITE"
 
-    username_attributes = ["email"]
-    auto_verified_attributes = ["email"]
+  username_attributes      = ["email"]
+  auto_verified_attributes = ["email"]
 
-    username_configuration {
-        case_sensitive = false
+  username_configuration {
+    case_sensitive = false
+  }
+
+  admin_create_user_config {
+    allow_admin_create_user_only = false
+  }
+
+  email_configuration {
+    email_sending_account = "COGNITO_DEFAULT"
+  }
+
+  verification_message_template {
+    default_email_option = "CONFIRM_WITH_CODE"
+  }
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
     }
+  }
 
-    admin_create_user_config {
-        allow_admin_create_user_only = false
-    }
-
-    email_configuration {
-        email_sending_account = "COGNITO_DEFAULT"
-    }
-
-    verification_message_template {
-        default_email_option = "CONFIRM_WITH_CODE"
-    }
-
-    account_recovery_setting {
-      recovery_mechanism {
-        name = "verified_email"
-        priority = 1
-      }
-    }
-
-    tags = {
-        Project = "aws-task-manager"
-    }
+  tags = {
+    Project = "aws-task-manager"
+  }
 }
 
 resource "aws_cognito_user_pool_client" "frontend" {
