@@ -44,6 +44,16 @@ resource "aws_cognito_user_pool_client" "frontend" {
   allowed_oauth_scopes                 = ["email", "openid", "profile"]
   supported_identity_providers         = ["COGNITO"]
 
+  access_token_validity  = 15
+  id_token_validity      = 15
+  refresh_token_validity = 7
+
+  token_validity_units {
+    access_token  = "minutes"
+    id_token      = "minutes"
+    refresh_token = "days"
+  }
+
   callback_urls = [
     "http://localhost:3000/callback",
     "https://${aws_cloudfront_distribution.frontend.domain_name}/callback"
@@ -54,7 +64,10 @@ resource "aws_cognito_user_pool_client" "frontend" {
     "https://${aws_cloudfront_distribution.frontend.domain_name}/"
   ]
 
-  explicit_auth_flows           = ["ALLOW_REFRESH_TOKEN_AUTH"]
+  explicit_auth_flows = [
+    "ALLOW_USER_SRP_AUTH",
+    "ALLOW_REFRESH_TOKEN_AUTH"
+  ]
   prevent_user_existence_errors = "ENABLED"
   enable_token_revocation       = true
 }
