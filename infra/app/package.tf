@@ -7,3 +7,13 @@ data "archive_file" "health" {
     filename = "main.mjs"
   }
 }
+
+data "archive_file" "me" {
+  type        = "zip"
+  output_path = "${path.module}/me.zip"
+
+  source {
+    content  = file("${path.module}/../../backend/dist/me.js")
+    filename = "me.mjs"
+  }
+}

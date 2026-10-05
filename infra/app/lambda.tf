@@ -9,3 +9,15 @@ resource "aws_lambda_function" "health" {
 
   depends_on = [aws_iam_role_policy.health_logs]
 }
+
+resource "aws_lambda_function" "me" {
+  function_name = "aws-task-manager-me"
+  runtime       = "nodejs22.x"
+  handler       = "me.handler"
+  role          = aws_iam_role.me.arn
+
+  filename         = data.archive_file.me.output_path
+  source_code_hash = data.archive_file.me.output_base64sha256
+
+  depends_on = [aws_iam_role_policy.me_logs]
+}
