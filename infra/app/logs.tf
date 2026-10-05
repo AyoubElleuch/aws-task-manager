@@ -2,3 +2,8 @@ resource "aws_cloudwatch_log_group" "health" {
   name              = "/aws/lambda/aws-task-manager-health"
   retention_in_days = 14
 }
+
+resource "aws_cloudwatch_log_group" "me" {
+  name              = "/aws/lambda/aws-task-manager-me"
+  retention_in_days = 14
+}

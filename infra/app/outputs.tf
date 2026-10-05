@@ -17,3 +17,18 @@ output "frontend_distribution_id" {
   description = "CloudFront distribution ID used during deployment"
   value       = aws_cloudfront_distribution.frontend.id
 }
+
+output "cognito_user_pool_id" {
+  description = "ID of the Cognito User Pool"
+  value       = aws_cognito_user_pool.app.id
+}
+
+output "cognito_user_pool_client_id" {
+  description = "ID of the Cognito User Pool Client for the frontend"
+  value       = aws_cognito_user_pool_client.frontend.id
+}
+
+output "api_base_url" {
+  description = "Base URL of the API Gateway"
+  value       = aws_apigatewayv2_api.task_manager.api_endpoint
+}
