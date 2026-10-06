@@ -111,3 +111,24 @@ p[role="alert"] {
   background: #fef2f2;
   color: #b91c1c;
 }
+
+.projects-list {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+
+.project-card {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.project-card h3 {
+  margin: 0;
+}
+
+.create-project {
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
