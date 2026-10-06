@@ -5,6 +5,7 @@ import { handler } from "../src/projects";
 
 const send = vi.spyOn(DynamoDBDocumentClient.prototype, "send");
 vi.stubEnv("PROJECTS_TABLE", "test-projects");
+vi.stubEnv("MILESTONES_TABLE", "test-milestones");
 
 function event(method: "GET" | "POST" | "PATCH" | "DELETE", projectId?: string, body?: string) {
   return {
@@ -63,17 +64,45 @@ describe("projects handler", () => {
     });
   });
 
-  test("DELETE removes a project for the authenticated user", async () => {
+  test("DELETE does not remove milestones from someone else's project", async () => {
     send.mockReset();
     send.mockImplementation(async () => ({}));
+
+    const response = await handler(event("DELETE", "project-1"));
+
+    expect(response.statusCode).toBe(404);
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0][0]).toMatchObject({
+      input: { TableName: "test-projects", Key: { userId: "user-123", projectId: "project-1" } },
+    });
+  });
+
+  test("DELETE removes a project and its milestones", async () => {
+    const project = { userId: "user-123", projectId: "project-1", name: "Home" };
+    const milestone = { projectId: "project-1", milestoneId: "milestone-1" };
+    const responses = [
+      { Item: project },
+      { Items: [milestone] },
+      {},
+      {},
+    ];
+    send.mockReset();
+    send.mockImplementation(async () => responses.shift() ?? {});
 
     const response = await handler(event("DELETE", "project-1"));
     const deleted = JSON.parse(response.body ?? "");
 
     expect(response.statusCode).toBe(200);
     expect(deleted).toEqual({ message: "Project deleted" });
-    expect(send.mock.calls[0][0]).toMatchObject({
-      input: { Key: { userId: "user-123", projectId: "project-1" } },
+    expect(send).toHaveBeenCalledTimes(4);
+    expect(send.mock.calls[1][0]).toMatchObject({
+      input: { TableName: "test-milestones", ExpressionAttributeValues: { ":projectId": "project-1" } },
+    });
+    expect(send.mock.calls[2][0]).toMatchObject({
+      input: { TableName: "test-milestones", Key: milestone },
+    });
+    expect(send.mock.calls[3][0]).toMatchObject({
+      input: { TableName: "test-projects", Key: { userId: "user-123", projectId: "project-1" } },
     });
   });
 });
