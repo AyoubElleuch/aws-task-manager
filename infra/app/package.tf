@@ -24,7 +24,7 @@ data "archive_file" "projects" {
   output_path = "${path.module}/projects.zip"
 
   source {
-    content  = file("${path.module}/../../backend/dist/projects.js")
-    filename = "projects.mjs"
+    content  = file("${path.module}/../../backend/dist/projects.cjs")
+    filename = "projects.cjs"
   }
 }
