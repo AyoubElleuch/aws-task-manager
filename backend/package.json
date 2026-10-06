@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "oxlint src tests",
     "test": "vitest run",
-    "build": "tsc && esbuild src/projects.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/projects.js"
+    "build": "tsc && esbuild src/projects.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/projects.cjs"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.163",
