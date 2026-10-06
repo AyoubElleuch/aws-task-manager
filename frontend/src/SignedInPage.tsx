@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { getSession, logout } from "./auth/auth";
 
 export default function SignedInPage({ onSessionEnded }: { onSessionEnded: () => void }) {
@@ -56,6 +57,7 @@ export default function SignedInPage({ onSessionEnded }: { onSessionEnded: () =>
       <p>Signed in.</p>
       {userId && <p>User ID: {userId}</p>}
       {error && <p role="alert">{error}</p>}
+      <p><Link to="/projects">Projects</Link></p>
       <button type="button" onClick={() => void handleSignOut()}>Sign out</button>
     </div>
   );

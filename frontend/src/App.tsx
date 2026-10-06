@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { HashRouter, Navigate, Outlet, Route, Routes } from "react-router";
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router";
 import { getSession } from "./auth/auth";
 import { ConfirmEmailPage, ResetPasswordPage, SignInPage, SignUpPage } from "./auth/AuthPages";
 import SignedInPage from "./SignedInPage";
+import ProjectsPage from "./ProjectsPage";
 
 type SessionState = "checking" | "signed-in" | "signed-out";
 
@@ -11,7 +12,10 @@ function GuestRoute({ session }: { session: SessionState }) {
 }
 
 function PrivateRoute({ session, guestPath }: { session: SessionState; guestPath: string }) {
-  return session === "signed-in" ? <Outlet /> : <Navigate to={guestPath} replace />;
+  const location = useLocation();
+  if (session === "signed-in") return <Outlet />;
+  if (location.pathname === "/") return <Navigate to={guestPath} replace />;
+  return <Navigate to="/signin" replace />;
 }
 
 export default function App() {
@@ -37,7 +41,7 @@ export default function App() {
   if (session === "checking") return <p>Checking session...</p>;
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
         <Route element={<GuestRoute session={session} />}>
           <Route path="/signup" element={<SignUpPage />} />
@@ -50,9 +54,10 @@ export default function App() {
             setGuestPath("/signin");
             setSession("signed-out");
           }} />} />
+          <Route path="/projects" element={<ProjectsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
