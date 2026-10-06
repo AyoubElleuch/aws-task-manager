@@ -69,3 +69,46 @@ resource "aws_iam_role_policy" "me_logs" {
     ]
   })
 }
+
+resource "aws_iam_role" "projects" {
+  name = "aws-task-manager-projects"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "projects_logs" {
+  name = "write-projects-logs"
+  role = aws_iam_role.projects.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+      Resource = "${trimsuffix(aws_cloudwatch_log_group.projects.arn, ":*")}:log-stream:*"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "projects_dynamodb" {
+  name = "projects-table-access"
+  role = aws_iam_role.projects.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:PutItem"]
+      Resource = aws_dynamodb_table.projects.arn
+    }]
+  })
+}
