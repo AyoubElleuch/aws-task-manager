@@ -17,3 +17,14 @@ data "archive_file" "me" {
     filename = "me.mjs"
   }
 }
+
+
+data "archive_file" "projects" {
+  type        = "zip"
+  output_path = "${path.module}/projects.zip"
+
+  source {
+    content  = file("${path.module}/../../backend/dist/projects.js")
+    filename = "projects.mjs"
+  }
+}
