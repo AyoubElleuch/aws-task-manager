@@ -27,18 +27,42 @@ resource "aws_lambda_function" "projects" {
   runtime       = "nodejs22.x"
   handler       = "projects.handler"
   role          = aws_iam_role.projects.arn
+  timeout       = 30
 
   filename         = data.archive_file.projects.output_path
   source_code_hash = data.archive_file.projects.output_base64sha256
 
   environment {
     variables = {
-      PROJECTS_TABLE = aws_dynamodb_table.projects.name
+      PROJECTS_TABLE   = aws_dynamodb_table.projects.name
+      MILESTONES_TABLE = aws_dynamodb_table.milestones.name
     }
   }
 
   depends_on = [
     aws_iam_role_policy.projects_logs,
     aws_iam_role_policy.projects_dynamodb,
+  ]
+}
+
+resource "aws_lambda_function" "milestones" {
+  function_name = "aws-task-manager-milestones"
+  runtime       = "nodejs22.x"
+  handler       = "milestones.handler"
+  role          = aws_iam_role.milestones.arn
+
+  filename         = data.archive_file.milestones.output_path
+  source_code_hash = data.archive_file.milestones.output_base64sha256
+
+  environment {
+    variables = {
+      MILESTONES_TABLE = aws_dynamodb_table.milestones.name
+      PROJECTS_TABLE   = aws_dynamodb_table.projects.name
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.milestones_logs,
+    aws_iam_role_policy.milestones_dynamodb,
   ]
 }
