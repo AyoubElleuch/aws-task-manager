@@ -10,6 +10,7 @@ import {
   GetCommand,
   PutCommand,
   QueryCommand,
+  type QueryCommandInput,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
@@ -147,6 +148,32 @@ export async function handler(
     if (!projectId || !projectId.trim()) {
       return json(400, { message: "Project ID is required" });
     }
+
+    const milestonesTable = process.env.MILESTONES_TABLE;
+    if (!milestonesTable) throw new Error("MILESTONES_TABLE is missing");
+
+    const project = await db.send(new GetCommand({
+      TableName: table,
+      Key: { userId, projectId },
+      ConsistentRead: true,
+    }));
+    if (!project.Item) return json(404, { message: "Project not found" });
+
+    let lastKey: QueryCommandInput["ExclusiveStartKey"];
+    do {
+      const page = await db.send(new QueryCommand({
+        TableName: milestonesTable,
+        KeyConditionExpression: "projectId = :projectId",
+        ExpressionAttributeValues: { ":projectId": projectId },
+        ConsistentRead: true,
+        ExclusiveStartKey: lastKey,
+      }));
+      await Promise.all((page.Items ?? []).map(({ milestoneId }) => db.send(new DeleteCommand({
+        TableName: milestonesTable,
+        Key: { projectId, milestoneId },
+      }))));
+      lastKey = page.LastEvaluatedKey;
+    } while (lastKey);
 
     try {
       await db.send(new DeleteCommand({
