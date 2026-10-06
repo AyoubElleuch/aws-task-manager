@@ -1,0 +1,99 @@
+import type {
+  APIGatewayProxyEventV2WithJWTAuthorizer,
+  APIGatewayProxyStructuredResultV2,
+} from "aws-lambda";
+import { randomUUID } from "node:crypto";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
+
+const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+
+function json(statusCode: number, value: unknown): APIGatewayProxyStructuredResultV2 {
+  return {
+    statusCode,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(value),
+  };
+}
+
+export async function handler(
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
+): Promise<APIGatewayProxyStructuredResultV2> {
+  // Read the authenticated caller for THIS request.
+  const userId = event.requestContext.authorizer?.jwt?.claims?.sub;
+  if (typeof userId !== "string" || !userId) {
+    return json(401, { message: "Unauthorized" });
+  }
+
+  const table = process.env.PROJECTS_TABLE;
+  if (!table) throw new Error("PROJECTS_TABLE is missing");
+
+  if (event.requestContext.http.method === "GET") {
+    const projectId = event.queryStringParameters?.projectId;
+
+    if (projectId !== undefined) {
+      if (!projectId.trim()) {
+        return json(400, { message: "Project ID is required" });
+      }
+
+      const result = await db.send(new GetCommand({
+        TableName: table,
+        Key: { userId, projectId },
+      }));
+
+      if (!result.Item) {
+        return json(404, { message: "Project not found" });
+      }
+
+      return json(200, { project: result.Item });
+    }
+
+    const page = await db.send(new QueryCommand({
+      TableName: table,
+      KeyConditionExpression: "userId = :userId",
+      ExpressionAttributeValues: { ":userId": userId },
+    }));
+
+    return json(200, { projects: page.Items ?? [] });
+  }
+
+  if (event.requestContext.http.method === "POST") {
+    let input: unknown;
+    try {
+      input = JSON.parse(event.body ?? "{}") as unknown;
+    } catch {
+      return json(400, { message: "Invalid JSON" });
+    }
+
+    if (
+      !input ||
+      typeof input !== "object" ||
+      !("name" in input) ||
+      typeof input.name !== "string" ||
+      !input.name.trim()
+    ) {
+      return json(400, { message: "Project name is required" });
+    }
+
+    const project = {
+      userId,
+      projectId: randomUUID(),
+      name: input.name.trim(),
+    };
+
+    await db.send(new PutCommand({
+      TableName: table,
+      Item: project,
+      ConditionExpression: "attribute_not_exists(userId)",
+    }));
+
+    return json(201, { projectId: project.projectId, name: project.name });
+  }
+
+  return json(405, { message: "Method not allowed" });
+}
