@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ProjectCard from "./projects/ProjectCard";
-import { listProjects, createProject } from "./projects/projectsApi";
+import { listProjects, createProject, updateProject, deleteProject } from "./projects/projectsApi";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<{ projectId: string; name: string }[]>([]);
@@ -23,6 +23,26 @@ export default function ProjectsPage() {
     void fetchProjects();
   }, []);
 
+  async function handleDelete(projectId: string) {
+    setError(null);
+    try {
+      await deleteProject(projectId);
+      setProjects((current) => current.filter((project) => project.projectId !== projectId));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not delete project.");
+    }
+  }
+  
+  async function handleUpdate(projectId: string, name: string) {
+    setError(null);
+    try {
+      const updatedProject = await updateProject(projectId, name);
+      setProjects((current) => current.map((project) => project.projectId === projectId ? updatedProject : project));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not update project.");
+    }
+  }
+
   return (
     <div className="projects-page">
       <h1>Projects</h1>
@@ -31,7 +51,11 @@ export default function ProjectsPage() {
       <div className="projects-list">
         {!loading && projects.length === 0 && <p>No projects yet.</p>}
         {projects.map((project) => (
-          <ProjectCard key={project.projectId} name={project.name} />
+          <ProjectCard  key={project.projectId}
+                        name={project.name}
+                        onDelete={() => handleDelete(project.projectId)}
+                        onUpdate={(name) => handleUpdate(project.projectId, name)}
+                        />
         ))}
       </div>
       <form className="create-project" onSubmit={async (event) => {
