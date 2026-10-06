@@ -3,12 +3,14 @@ import type {
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda";
 import { randomUUID } from "node:crypto";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { ConditionalCheckFailedException, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
+  DeleteCommand,
   DynamoDBDocumentClient,
   GetCommand,
   PutCommand,
   QueryCommand,
+  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -95,5 +97,71 @@ export async function handler(
     return json(201, { projectId: project.projectId, name: project.name });
   }
 
+  if (event.requestContext.http.method === "PATCH") {
+    const projectId = event.queryStringParameters?.projectId;
+
+    if (!projectId || !projectId.trim()) {
+      return json(400, { message: "Project ID is required" });
+    }
+
+    let input: unknown;
+    try {
+      input = JSON.parse(event.body ?? "{}") as unknown;
+    } catch {
+      return json(400, { message: "Invalid JSON" });
+    }
+
+    if (
+      !input ||
+      typeof input !== "object" ||
+      !("name" in input) ||
+      typeof input.name !== "string" ||
+      !input.name.trim()
+    ) {
+      return json(400, { message: "Project name is required" });
+    }
+
+    try {
+      const result = await db.send(new UpdateCommand({
+        TableName: table,
+        Key: { userId, projectId },
+        UpdateExpression: "SET #name = :name",
+        ExpressionAttributeNames: { "#name": "name" },
+        ExpressionAttributeValues: { ":name": input.name.trim() },
+        ConditionExpression: "attribute_exists(userId) AND attribute_exists(projectId)",
+        ReturnValues: "ALL_NEW",
+      }));
+
+      return json(200, { project: result.Attributes });
+    } catch (error) {
+      if (error instanceof ConditionalCheckFailedException) {
+        return json(404, { message: "Project not found" });
+      }
+      throw error;
+    }
+  }
+
+  if (event.requestContext.http.method === "DELETE") {
+    const projectId = event.queryStringParameters?.projectId;
+
+    if (!projectId || !projectId.trim()) {
+      return json(400, { message: "Project ID is required" });
+    }
+
+    try {
+      await db.send(new DeleteCommand({
+        TableName: table,
+        Key: { userId, projectId },
+        ConditionExpression: "attribute_exists(userId) AND attribute_exists(projectId)",
+      }));
+
+      return json(200, { message: "Project deleted" });
+    } catch (error) {
+      if (error instanceof ConditionalCheckFailedException) {
+        return json(404, { message: "Project not found" });
+      }
+      throw error;
+    }
+  }
   return json(405, { message: "Method not allowed" });
 }

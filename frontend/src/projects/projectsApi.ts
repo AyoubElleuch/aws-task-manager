@@ -25,7 +25,7 @@ export async function listProjects() {
 
 export async function getProject(projectId: string) {
   const token = await getToken();
-  const url = `${getProjectsUrl()}?projectId=${projectId}`;
+  const url = `${getProjectsUrl()}?projectId=${encodeURIComponent(projectId)}`;
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -44,6 +44,37 @@ export async function createProject(name: string) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ name }),
+  });
+  if (!response.ok) throw new Error(`/projects returned ${response.status}.`);
+
+  return response.json();
+}
+
+export async function updateProject(projectId: string, name: string) {
+  const token = await getToken();
+  const url = `${getProjectsUrl()}?projectId=${encodeURIComponent(projectId)}`;
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (!response.ok) throw new Error(`/projects returned ${response.status}.`);
+
+  const data = await response.json();
+  return data.project;
+}
+
+export async function deleteProject(projectId: string) {
+  const token = await getToken();
+  const url = `${getProjectsUrl()}?projectId=${encodeURIComponent(projectId)}`;
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
   if (!response.ok) throw new Error(`/projects returned ${response.status}.`);
 

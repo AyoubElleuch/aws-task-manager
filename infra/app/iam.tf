@@ -107,7 +107,7 @@ resource "aws_iam_role_policy" "projects_dynamodb" {
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
-      Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:PutItem"]
+      Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
       Resource = aws_dynamodb_table.projects.arn
     }]
   })

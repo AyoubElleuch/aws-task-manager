@@ -6,7 +6,7 @@ import { handler } from "../src/projects";
 const send = vi.spyOn(DynamoDBDocumentClient.prototype, "send");
 vi.stubEnv("PROJECTS_TABLE", "test-projects");
 
-function event(method: "GET" | "POST", projectId?: string, body?: string) {
+function event(method: "GET" | "POST" | "PATCH" | "DELETE", projectId?: string, body?: string) {
   return {
     requestContext: {
       http: { method },
@@ -45,6 +45,35 @@ describe("projects handler", () => {
     expect(created).toEqual({ projectId: expect.any(String), name: "Home" });
     expect(send.mock.calls[0][0]).toMatchObject({
       input: { Item: { userId: "user-123", projectId: created.projectId, name: "Home" } },
+    });
+  });
+
+  test("PATCH updates a project for the authenticated user", async () => {
+    const project = { userId: "user-123", projectId: "project-1", name: "Work" };
+    send.mockReset();
+    send.mockImplementation(async () => ({ Attributes: project }));
+
+    const response = await handler(event("PATCH", "project-1", JSON.stringify({ name: "Work" })));
+    const updated = JSON.parse(response.body ?? "");
+
+    expect(response.statusCode).toBe(200);
+    expect(updated).toEqual({ project });
+    expect(send.mock.calls[0][0]).toMatchObject({
+      input: { Key: { userId: "user-123", projectId: "project-1" }, UpdateExpression: expect.any(String), ExpressionAttributeValues: { ":name": "Work" } },
+    });
+  });
+
+  test("DELETE removes a project for the authenticated user", async () => {
+    send.mockReset();
+    send.mockImplementation(async () => ({}));
+
+    const response = await handler(event("DELETE", "project-1"));
+    const deleted = JSON.parse(response.body ?? "");
+
+    expect(response.statusCode).toBe(200);
+    expect(deleted).toEqual({ message: "Project deleted" });
+    expect(send.mock.calls[0][0]).toMatchObject({
+      input: { Key: { userId: "user-123", projectId: "project-1" } },
     });
   });
 });

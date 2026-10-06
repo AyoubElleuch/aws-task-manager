@@ -128,6 +128,17 @@ p[role="alert"] {
   margin: 0;
 }
 
+.project-card dialog {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 20px;
+  color: inherit;
+}
+
+.project-card dialog::backdrop {
+  background: rgb(15 23 42 / 40%);
+}
+
 .create-project {
   padding-top: 16px;
   border-top: 1px solid #e2e8f0;
