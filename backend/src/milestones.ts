@@ -13,6 +13,8 @@ import {
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
+import { deleteTasks } from "./deleteTasks.js";
+
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 function json(statusCode: number, value: unknown): APIGatewayProxyStructuredResultV2 {
@@ -135,6 +137,17 @@ export async function handler(
 
   if (method === "DELETE") {
     if (!milestoneId?.trim()) return json(400, { message: "Milestone ID is required" });
+    const tasksTable = process.env.TASKS_TABLE;
+    if (!tasksTable) throw new Error("TASKS_TABLE is missing");
+
+    const milestone = await db.send(new GetCommand({
+      TableName: milestonesTable,
+      Key: { projectId, milestoneId },
+      ConsistentRead: true,
+    }));
+    if (!milestone.Item) return json(404, { message: "Milestone not found" });
+
+    await deleteTasks(db, tasksTable, `${projectId}#${milestoneId}`);
     try {
       await db.send(new DeleteCommand({
         TableName: milestonesTable,
