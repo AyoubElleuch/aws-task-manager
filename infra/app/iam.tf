@@ -114,7 +114,7 @@ resource "aws_iam_role_policy" "projects_dynamodb" {
       {
         Effect   = "Allow"
         Action   = ["dynamodb:Query", "dynamodb:DeleteItem"]
-        Resource = aws_dynamodb_table.milestones.arn
+        Resource = [aws_dynamodb_table.milestones.arn, aws_dynamodb_table.tasks.arn]
       }
     ]
   })
@@ -172,6 +172,68 @@ resource "aws_iam_role_policy" "milestones_dynamodb" {
         Effect   = "Allow"
         Action   = ["dynamodb:GetItem"]
         Resource = aws_dynamodb_table.projects.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:Query", "dynamodb:DeleteItem"]
+        Resource = aws_dynamodb_table.tasks.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "tasks" {
+  name = "aws-task-manager-tasks"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "tasks_logs" {
+  name = "write-tasks-logs"
+  role = aws_iam_role.tasks.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Effect   = "Allow"
+        Resource = "${trimsuffix(aws_cloudwatch_log_group.tasks.arn, ":*")}:log-stream:*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "tasks_dynamodb" {
+  name = "tasks-table-access"
+  role = aws_iam_role.tasks.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
+        Resource = aws_dynamodb_table.tasks.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:GetItem"]
+        Resource = [aws_dynamodb_table.projects.arn, aws_dynamodb_table.milestones.arn]
       }
     ]
   })

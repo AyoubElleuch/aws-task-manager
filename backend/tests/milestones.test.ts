@@ -6,6 +6,7 @@ import { handler } from "../src/milestones";
 const send = vi.spyOn(DynamoDBDocumentClient.prototype, "send");
 vi.stubEnv("PROJECTS_TABLE", "test-projects");
 vi.stubEnv("MILESTONES_TABLE", "test-milestones");
+vi.stubEnv("TASKS_TABLE", "test-tasks");
 
 beforeEach(() => send.mockReset());
 
@@ -79,12 +80,12 @@ test("PATCH renames a milestone", async () => {
 });
 
 test("DELETE removes a milestone", async () => {
-  mockDb({ Item: project }, {});
+  mockDb({ Item: project }, { Item: milestone }, { Items: [] }, {});
 
   const response = await handler(event("DELETE", "project-1", "milestone-1"));
 
   expect(JSON.parse(response.body ?? "")).toEqual({ message: "Milestone deleted" });
-  expect(send.mock.calls[1][0]).toMatchObject({
+  expect(send.mock.calls[3][0]).toMatchObject({
     input: { Key: { projectId: "project-1", milestoneId: "milestone-1" } },
   });
 });
@@ -98,4 +99,55 @@ test("GET returns all milestone pages", async () => {
 
   expect(JSON.parse(response.body ?? "")).toEqual({ milestones: [milestone, second] });
   expect(send.mock.calls[2][0]).toMatchObject({ input: { ExclusiveStartKey: key } });
+});
+
+test("DELETE removes all task pages before the milestone", async () => {
+  const first = { milestoneKey: "project-1#milestone-1", taskId: "task-1" };
+  const second = { ...first, taskId: "task-2" };
+  mockDb(
+    { Item: project },
+    { Item: milestone },
+    { Items: [first], LastEvaluatedKey: first },
+    {},
+    { Items: [second] },
+    {},
+    {},
+  );
+
+  const response = await handler(event("DELETE", "project-1", "milestone-1"));
+
+  expect(response.statusCode).toBe(200);
+  expect(send).toHaveBeenCalledTimes(7);
+  expect(send.mock.calls[3][0]).toMatchObject({ input: { TableName: "test-tasks", Key: first } });
+  expect(send.mock.calls[4][0]).toMatchObject({ input: { ExclusiveStartKey: first } });
+  expect(send.mock.calls[5][0]).toMatchObject({ input: { TableName: "test-tasks", Key: second } });
+  expect(send.mock.calls[6][0]).toMatchObject({
+    input: { TableName: "test-milestones", Key: { projectId: "project-1", milestoneId: "milestone-1" } },
+  });
+});
+
+test("DELETE stops when the milestone does not exist", async () => {
+  mockDb({ Item: project }, {});
+
+  const response = await handler(event("DELETE", "project-1", "missing"));
+
+  expect(response.statusCode).toBe(404);
+  expect(send).toHaveBeenCalledTimes(2);
+});
+
+test("DELETE keeps the milestone if task cleanup fails", async () => {
+  mockDb({});
+  send.mockImplementationOnce(async () => ({ Item: project }));
+  send.mockImplementationOnce(async () => ({ Item: milestone }));
+  send.mockImplementationOnce(async () => ({ Items: [{ taskId: "task-1" }] }));
+  send.mockImplementationOnce(async () => {
+    throw new Error("Task deletion failed");
+  });
+
+  await expect(handler(event("DELETE", "project-1", "milestone-1"))).rejects.toThrow("Task deletion failed");
+
+  expect(send).toHaveBeenCalledTimes(4);
+  expect(send.mock.calls[3][0]).toMatchObject({
+    input: { TableName: "test-tasks", Key: { milestoneKey: "project-1#milestone-1", taskId: "task-1" } },
+  });
 });

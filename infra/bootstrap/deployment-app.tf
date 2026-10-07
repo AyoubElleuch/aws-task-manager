@@ -17,6 +17,9 @@ locals {
   milestones_role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-task-manager-milestones"
   milestones_lambda_arn = "arn:aws:lambda:us-east-1:${data.aws_caller_identity.current.account_id}:function:aws-task-manager-milestones"
   milestones_log_arn    = "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/aws-task-manager-milestones"
+  tasks_role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-task-manager-tasks"
+  tasks_lambda_arn      = "arn:aws:lambda:us-east-1:${data.aws_caller_identity.current.account_id}:function:aws-task-manager-tasks"
+  tasks_log_arn         = "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/aws-task-manager-tasks"
 }
 
 resource "aws_iam_role_policy" "github_app_deploy" {
@@ -90,19 +93,19 @@ resource "aws_iam_role_policy" "github_app_deploy" {
         Sid      = "ManageHealthLambda"
         Effect   = "Allow"
         Action   = ["lambda:*"]
-        Resource = [local.health_lambda_arn, local.me_lambda_arn, local.projects_lambda_arn, local.milestones_lambda_arn]
+        Resource = [local.health_lambda_arn, local.me_lambda_arn, local.projects_lambda_arn, local.milestones_lambda_arn, local.tasks_lambda_arn]
       },
       {
         Sid      = "ManageHealthExecutionRole"
         Effect   = "Allow"
         Action   = ["iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:UpdateAssumeRolePolicy", "iam:PutRolePolicy", "iam:GetRolePolicy", "iam:DeleteRolePolicy", "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:ListInstanceProfilesForRole", "iam:ListRoleTags", "iam:TagRole", "iam:UntagRole"]
-        Resource = [local.health_role_arn, local.me_role_arn, local.projects_role_arn, local.milestones_role_arn]
+        Resource = [local.health_role_arn, local.me_role_arn, local.projects_role_arn, local.milestones_role_arn, local.tasks_role_arn]
       },
       {
         Sid      = "PassHealthRoleToLambda"
         Effect   = "Allow"
         Action   = ["iam:PassRole"]
-        Resource = [local.health_role_arn, local.me_role_arn, local.projects_role_arn, local.milestones_role_arn]
+        Resource = [local.health_role_arn, local.me_role_arn, local.projects_role_arn, local.milestones_role_arn, local.tasks_role_arn]
         Condition = {
           StringEquals = {
             "iam:PassedToService" = "lambda.amazonaws.com"
@@ -113,7 +116,7 @@ resource "aws_iam_role_policy" "github_app_deploy" {
         Sid      = "ManageHealthLogs"
         Effect   = "Allow"
         Action   = ["logs:*"]
-        Resource = [local.health_log_arn, "${local.health_log_arn}:*", local.me_log_arn, "${local.me_log_arn}:*", local.projects_log_arn, "${local.projects_log_arn}:*", local.milestones_log_arn, "${local.milestones_log_arn}:*"]
+        Resource = [local.health_log_arn, "${local.health_log_arn}:*", local.me_log_arn, "${local.me_log_arn}:*", local.projects_log_arn, "${local.projects_log_arn}:*", local.milestones_log_arn, "${local.milestones_log_arn}:*", local.tasks_log_arn, "${local.tasks_log_arn}:*"]
       },
       {
         Sid      = "ListLogGroups"

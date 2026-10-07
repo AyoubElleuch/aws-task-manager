@@ -10,9 +10,10 @@ import {
   GetCommand,
   PutCommand,
   QueryCommand,
-  type QueryCommandInput,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
+
+import { deleteTasks } from "./deleteTasks.js";
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -27,7 +28,6 @@ function json(statusCode: number, value: unknown): APIGatewayProxyStructuredResu
 export async function handler(
   event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ): Promise<APIGatewayProxyStructuredResultV2> {
-  // Read the authenticated caller for THIS request.
   const userId = event.requestContext.authorizer?.jwt?.claims?.sub;
   if (typeof userId !== "string" || !userId) {
     return json(401, { message: "Unauthorized" });
@@ -150,7 +150,10 @@ export async function handler(
     }
 
     const milestonesTable = process.env.MILESTONES_TABLE;
-    if (!milestonesTable) throw new Error("MILESTONES_TABLE is missing");
+    const tasksTable = process.env.TASKS_TABLE;
+    if (!milestonesTable || !tasksTable) {
+      throw new Error("Milestones or tasks table is missing");
+    }
 
     const project = await db.send(new GetCommand({
       TableName: table,
@@ -159,7 +162,7 @@ export async function handler(
     }));
     if (!project.Item) return json(404, { message: "Project not found" });
 
-    let lastKey: QueryCommandInput["ExclusiveStartKey"];
+    let lastKey: Record<string, unknown> | undefined;
     do {
       const page = await db.send(new QueryCommand({
         TableName: milestonesTable,
@@ -168,10 +171,13 @@ export async function handler(
         ConsistentRead: true,
         ExclusiveStartKey: lastKey,
       }));
-      await Promise.all((page.Items ?? []).map(({ milestoneId }) => db.send(new DeleteCommand({
-        TableName: milestonesTable,
-        Key: { projectId, milestoneId },
-      }))));
+      for (const milestone of page.Items ?? []) {
+        await deleteTasks(db, tasksTable, `${projectId}#${milestone.milestoneId}`);
+        await db.send(new DeleteCommand({
+          TableName: milestonesTable,
+          Key: { projectId, milestoneId: milestone.milestoneId },
+        }));
+      }
       lastKey = page.LastEvaluatedKey;
     } while (lastKey);
 
