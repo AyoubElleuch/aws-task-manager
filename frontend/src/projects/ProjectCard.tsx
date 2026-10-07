@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
+import { Link } from "react-router";
 
-export default function ProjectCard({ name, onUpdate, onDelete }: { name: string; onUpdate: (name: string) => void; onDelete: () => void }) {
+export default function ProjectCard({ projectId, name, onUpdate, onDelete }: { projectId: string; name: string; onUpdate: (name: string) => void; onDelete: () => void }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
   const deleteDialog = useRef<HTMLDialogElement>(null);
@@ -19,7 +20,7 @@ export default function ProjectCard({ name, onUpdate, onDelete }: { name: string
         </form>
       ) : (
         <>
-          <h3>{name}</h3>
+          <h3><Link to={`/projects/${encodeURIComponent(projectId)}`}>{name}</Link></h3>
           <button type="button" onClick={() => {
             setDraft(name);
             setEditing(true);
