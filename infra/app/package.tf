@@ -38,3 +38,13 @@ data "archive_file" "milestones" {
     filename = "milestones.cjs"
   }
 }
+
+data "archive_file" "tasks" {
+  type        = "zip"
+  output_path = "${path.module}/tasks.zip"
+
+  source {
+    content  = file("${path.module}/../../backend/dist/tasks.cjs")
+    filename = "tasks.cjs"
+  }
+}
