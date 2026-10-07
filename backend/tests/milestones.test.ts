@@ -88,3 +88,14 @@ test("DELETE removes a milestone", async () => {
     input: { Key: { projectId: "project-1", milestoneId: "milestone-1" } },
   });
 });
+
+test("GET returns all milestone pages", async () => {
+  const key = { projectId: "project-1", milestoneId: "milestone-1" };
+  const second = { ...milestone, milestoneId: "milestone-2" };
+  mockDb({ Item: project }, { Items: [milestone], LastEvaluatedKey: key }, { Items: [second] });
+
+  const response = await handler(event("GET"));
+
+  expect(JSON.parse(response.body ?? "")).toEqual({ milestones: [milestone, second] });
+  expect(send.mock.calls[2][0]).toMatchObject({ input: { ExclusiveStartKey: key } });
+});

@@ -60,12 +60,19 @@ export async function handler(
       return json(200, { milestone: result.Item });
     }
 
-    const page = await db.send(new QueryCommand({
-      TableName: milestonesTable,
-      KeyConditionExpression: "projectId = :projectId",
-      ExpressionAttributeValues: { ":projectId": projectId },
-    }));
-    return json(200, { milestones: page.Items ?? [] });
+    const milestones: Record<string, unknown>[] = [];
+    let lastKey: Record<string, unknown> | undefined;
+    do {
+      const page = await db.send(new QueryCommand({
+        TableName: milestonesTable,
+        KeyConditionExpression: "projectId = :projectId",
+        ExpressionAttributeValues: { ":projectId": projectId },
+        ExclusiveStartKey: lastKey,
+      }));
+      milestones.push(...(page.Items ?? []));
+      lastKey = page.LastEvaluatedKey;
+    } while (lastKey);
+    return json(200, { milestones });
   }
 
   if (method === "POST" || method === "PATCH") {
