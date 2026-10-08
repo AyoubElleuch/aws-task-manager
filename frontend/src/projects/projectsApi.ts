@@ -1,15 +1,9 @@
-import { getSession } from "../auth/auth";
+import { getToken } from "../auth/getToken";
 
 function getProjectsUrl() {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
   if (!apiUrl) throw new Error("VITE_API_BASE_URL is missing.");
   return `${apiUrl}/projects`;
-}
-
-async function getToken() {
-  const token = (await getSession()).tokens?.accessToken?.toString();
-  if (!token) throw new Error("Not signed in.");
-  return token;
 }
 
 export async function listProjects() {

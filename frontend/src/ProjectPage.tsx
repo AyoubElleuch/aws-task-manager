@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { fetchMilestones, createMilestone, deleteMilestone, updateMilestone } from "./milestones/milestonesApi";
 
+import MilestoneCard from "./milestones/MilestoneCard";
+import TaskList from "./tasks/TaskList";
+
 type Milestone = { projectId: string; milestoneId: string; name: string };
 
 export default function ProjectPage({ project }: { project: { projectId: string; name: string } }) {
@@ -9,8 +12,6 @@ export default function ProjectPage({ project }: { project: { projectId: string;
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newMilestoneName, setNewMilestoneName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -82,29 +83,18 @@ export default function ProjectPage({ project }: { project: { projectId: string;
       </form>
       
       <ul>
-        {milestones.map((milestone) => (
+        {!loading && milestones.map((milestone) => (
           <li key={milestone.milestoneId}>
-            {editingId === milestone.milestoneId ? (
-              <form onSubmit={async (event) => {
-                event.preventDefault();
-                const name = draft.trim();
-                await handleUpdate(milestone.milestoneId, name);
-                setEditingId(null);
-              }}>
-                <input aria-label="Milestone name" value={draft} onChange={(event) => setDraft(event.target.value)} autoFocus />
-                <button type="submit" disabled={!draft.trim() || draft.trim() === milestone.name}>Save</button>
-                <button type="button" onClick={() => setEditingId(null)}>Cancel</button>
-              </form>
-            ) : (
-              <>
-                {milestone.name}
-                <button type="button" onClick={() => {
-                  setDraft(milestone.name);
-                  setEditingId(milestone.milestoneId);
-                }}>Edit</button>
-              </>
-            )}
-            <button type="button" onClick={() => void handleDelete(milestone.milestoneId)}>Delete</button>
+            <MilestoneCard
+              name={milestone.name}
+              onUpdate={name => void handleUpdate(milestone.milestoneId, name)}
+              onDelete={() => void handleDelete(milestone.milestoneId)}
+            />
+            <TaskList
+              key={`${project.projectId}:${milestone.milestoneId}`}
+              projectId={project.projectId}
+              milestoneId={milestone.milestoneId}
+            />
           </li>
         ))}
       </ul>
