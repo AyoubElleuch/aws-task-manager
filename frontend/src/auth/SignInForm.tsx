@@ -76,13 +76,13 @@ export default function SignInForm({
         placeholder="Password"
       />
       <button type="submit" disabled={pending}>
-        Sign In
+        {pending ? "Signing in…" : "Sign In"}
       </button>
       <button type="button" onClick={handleForgotPassword} disabled={pending}>
         Forgot password?
       </button>
       {error && (
-        <p role="alert" style={{ color: "red" }}>
+        <p role="alert">
           {error}
         </p>
       )}
