@@ -32,7 +32,7 @@ export default function ProjectsPage() {
       setError(cause instanceof Error ? cause.message : "Could not delete project.");
     }
   }
-  
+
   async function handleUpdate(projectId: string, name: string) {
     setError(null);
     try {
@@ -45,21 +45,36 @@ export default function ProjectsPage() {
 
   return (
     <div className="projects-page">
+      <p className="eyebrow">The bigger picture</p>
       <h1>Projects</h1>
+      <p className="muted">Keep your work clear, one project at a time.</p>
+      <div className="stats" aria-label="Project statistics">
+        <div>
+          <span className="eyebrow">Total projects</span>
+          <strong>{loading || error ? "—" : projects.length}</strong>
+          <span className="muted">In your workspace</span>
+        </div>
+      </div>
       {loading && <p>Loading...</p>}
       {error && <p role="alert">{error}</p>}
       <div className="projects-list">
-        {!loading && projects.length === 0 && <p>No projects yet.</p>}
+        {!loading && !error && projects.length === 0 && (
+          <div className="empty-state">
+            <h2>A clean slate.</h2>
+            <p className="muted">Create your first project below to get started.</p>
+          </div>
+        )}
         {projects.map((project) => (
-          <ProjectCard  key={project.projectId}
-                        projectId={project.projectId}
-                        name={project.name}
-                        onDelete={() => handleDelete(project.projectId)}
-                        onUpdate={(name) => handleUpdate(project.projectId, name)}
-                        />
+          <ProjectCard
+            key={project.projectId}
+            projectId={project.projectId}
+            name={project.name}
+            onDelete={() => handleDelete(project.projectId)}
+            onUpdate={(name) => handleUpdate(project.projectId, name)}
+          />
         ))}
       </div>
-      <form className="create-project" onSubmit={async (event) => {
+      <form className="create-project create-form" onSubmit={async (event) => {
         event.preventDefault();
         setCreating(true);
         setError(null);
@@ -76,10 +91,13 @@ export default function ProjectsPage() {
         <label htmlFor="new-project-name">New project</label>
         <input
           id="new-project-name"
+          placeholder="e.g. Website launch"
+          maxLength={200}
+          required
           value={projectName}
           onChange={(event) => setProjectName(event.target.value)}
         />
-        <button type="submit" disabled={!projectName.trim() || creating}>Create project</button>
+        <button type="submit" disabled={!projectName.trim() || creating}>{creating ? "Creating…" : "Create project"}</button>
       </form>
     </div>
   );
