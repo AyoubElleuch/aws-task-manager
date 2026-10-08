@@ -1,48 +1,36 @@
 import { useState } from "react";
 
-export default function MilestoneCard({
-  name,
-  onUpdate,
-  onDelete,
-}: {
+export default function MilestoneCard({ name, onUpdate, onDelete }: {
   name: string;
   onUpdate: (name: string) => void;
   onDelete: () => void;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [newName, setNewName] = useState(name);
-
-  const handleUpdate = () => {
-    onUpdate(newName.trim());
-    setIsEditing(false);
-  };
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
 
   return (
     <div className="milestone-card">
-      {isEditing ? (
-        <input
-          aria-label="Milestone name"
-          autoFocus
-          value={newName}
-          onChange={(event) => setNewName(event.target.value)}
-          onBlur={handleUpdate}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") handleUpdate();
-          }}
-        />
+      {editing ? (
+        <form onSubmit={(event) => {
+          event.preventDefault();
+          if (!draft.trim()) return;
+          onUpdate(draft.trim());
+          setEditing(false);
+        }}>
+          <input aria-label="Milestone name" value={draft} onChange={(event) => setDraft(event.target.value)} autoFocus required maxLength={200} />
+          <button type="submit" disabled={!draft.trim() || draft.trim() === name}>Save</button>
+          <button type="button" onClick={() => setEditing(false)}>Cancel</button>
+        </form>
       ) : (
-        <span
-          onClick={() => {
-            setNewName(name);
-            setIsEditing(true);
-          }}
-        >
-          {name}
-        </span>
+        <>
+          <span className="item-name">{name}</span>
+          <button type="button" onClick={() => {
+            setDraft(name);
+            setEditing(true);
+          }}>Edit</button>
+          <button className="danger" type="button" onClick={onDelete}>Delete</button>
+        </>
       )}
-      <button type="button" onClick={onDelete}>
-        Delete
-      </button>
     </div>
   );
 }

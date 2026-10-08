@@ -54,13 +54,27 @@ export default function ProjectPage({ project }: { project: { projectId: string;
 
   return (
     <div className="project-page">
+      <p className="eyebrow">Project workspace</p>
       <h1>{project.name}</h1>
+      <p className="muted">Break it down into milestones. Keep the next step close.</p>
+      <div className="stats" aria-label="Milestone statistics">
+        <div>
+          <span className="eyebrow">Milestones</span>
+          <strong>{loading || error ? "—" : milestones.length}</strong>
+          <span className="muted">In this project</span>
+        </div>
+      </div>
       {loading && <p>Loading...</p>}
       {error && <p role="alert">{error}</p>}
-      {!loading && !error && milestones.length === 0 && <p>No milestones yet.</p>}
-      <form className="create-milestone" onSubmit={async (event) => {
+      {!loading && !error && milestones.length === 0 && (
+        <div className="empty-state">
+          <h2>Start with a milestone.</h2>
+          <p className="muted">Give your project its first step below.</p>
+        </div>
+      )}
+      <form className="create-milestone create-form" onSubmit={async (event) => {
         event.preventDefault();
-        if (loading || creating) return;
+        if (loading || creating || !newMilestoneName.trim()) return;
         setCreating(true);
         setError(null);
         try {
@@ -76,13 +90,16 @@ export default function ProjectPage({ project }: { project: { projectId: string;
         <label htmlFor="new-milestone-name">New milestone</label>
         <input
           id="new-milestone-name"
+          placeholder="e.g. First release"
+          maxLength={200}
+          required
           value={newMilestoneName}
           onChange={(event) => setNewMilestoneName(event.target.value)}
         />
-        <button type="submit" disabled={loading || creating}>Create milestone</button>
+        <button type="submit" disabled={loading || creating || !newMilestoneName.trim()}>{creating ? "Creating…" : "Create milestone"}</button>
       </form>
-      
-      <ul>
+
+      <ul className="milestones-list">
         {!loading && milestones.map((milestone) => (
           <li key={milestone.milestoneId}>
             <MilestoneCard

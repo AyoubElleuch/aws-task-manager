@@ -414,3 +414,117 @@ dialog button {
     padding: 20px;
   }
 }
+
+.project-page h1 {
+  overflow-wrap: anywhere;
+}
+
+.milestones-list,
+.tasks-list {
+  padding: 0;
+  list-style: none;
+}
+
+.milestones-list {
+  display: grid;
+  gap: 20px;
+  margin-top: 32px;
+}
+
+.milestones-list > li {
+  border: 1px solid #e4e4e4;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.milestone-card,
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.milestone-card {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e4e4e4;
+  background: #f5f5f5;
+}
+
+.item-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.milestone-card .item-name {
+  font-size: 18px;
+  font-weight: 500;
+  color: #303030;
+}
+
+.milestone-card form,
+.task-card form {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.milestone-card form input,
+.task-card form input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.milestone-card form button[type="submit"],
+.task-card form button[type="submit"] {
+  margin: 0;
+}
+
+.task-section {
+  padding: 16px 24px 24px;
+}
+
+.tasks-list {
+  margin: 16px 0;
+}
+
+.tasks-list > li {
+  padding: 12px 0;
+  border-bottom: 1px solid #e4e4e4;
+}
+
+.task-form {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.task-form button[type="submit"] {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .milestone-card {
+    padding: 16px;
+    flex-wrap: wrap;
+  }
+
+  .milestone-card > .item-name {
+    flex-basis: 100%;
+  }
+
+  .task-section {
+    padding: 12px 16px 20px;
+  }
+
+  .task-form {
+    grid-template-columns: 1fr;
+  }
+
+  .task-card {
+    flex-wrap: wrap;
+  }
+
+  .task-card > .item-name {
+    flex-basis: 100%;
+  }
+}
