@@ -143,3 +143,23 @@ p[role="alert"] {
   padding-top: 16px;
   border-top: 1px solid #e2e8f0;
 }
+
+.tasks-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.task-card span,
+.milestone-card span {
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
