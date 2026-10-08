@@ -1,22 +1,35 @@
 # Product scope
 
-AWS Task Manager is a serverless task manager for individual use. The first version lets a person organize tasks by project and keep their work across sessions.
+AWS Task Manager is a small app for organizing your own work. Each user has their own projects, and there is no sharing between users yet.
 
-## Core journey
+The structure is: projects -> milestones -> tasks.
 
-1. Sign up with email and password, verify the email, choose a unique username and full name, and sign in.
-2. Create a project and add tasks with titles.
-3. Edit, complete, reopen, or delete tasks; rename or delete projects.
-4. Return later and find the same projects and tasks.
+## Using the app
 
-## First version
+1. Sign up with your email and password, then confirm your email with the code.
+2. Sign in and open the projects page.
+3. Create a project and open it to add milestones.
+4. View the tasks inside each milestone. Click a milestone or task name to rename it.
+5. Come back later and load your saved data again.
 
-- **Account:** Sign in and out; each person's data is private.
-- **Projects:** List, create, rename, and delete projects. Confirm deletion when it will also remove tasks.
-- **Tasks:** Add, edit, complete, reopen, and delete tasks. A title is required.
-- **Experience:** Work on desktop and mobile, with clear empty states and errors and keyboard access.
-- **Delivery:** Deploy on AWS with infrastructure as code and passing CI checks.
+You can also rename or delete projects. Project deletion has a confirmation dialog and removes the project's milestones and tasks. Deleting a milestone also removes its tasks.
 
-## Later
+## What is available
 
-The app may later support collaboration between multiple people, including shared projects, task assignment, and roles. Due dates, priorities, descriptions, reminders, recurring tasks, attachments, and reporting are also outside the first version.
+- Accounts: sign up, email confirmation, sign in, sign out, and password reset.
+- Projects: list, create, open, rename, and delete.
+- Milestones: list, create, rename, and delete inside a project.
+- Tasks: list, rename, and delete inside a milestone.
+- Task creation through the API. There is no creation form in the app yet.
+- Saved data in DynamoDB, with project ownership checks in the API.
+
+## Still to do
+
+- Add a task creation form.
+- Add task completion and reopening.
+- Improve task loading and error messages. Task errors currently go to the browser console.
+- Improve keyboard access for inline editing and check the layout on mobile.
+
+## Maybe later
+
+Shared projects, task assignments, due dates, priorities, and reminders could be added later. For now, I'm keeping the app focused on individual use.
