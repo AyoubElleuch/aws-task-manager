@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { HashRouter, Navigate, Outlet, Route, Routes } from "react-router";
+import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useParams } from "react-router";
 import { getSession } from "./auth/auth";
 import { ConfirmEmailPage, ResetPasswordPage, SignInPage, SignUpPage } from "./auth/AuthPages";
 import SignedInPage from "./SignedInPage";
+import ProjectsPage from "./ProjectsPage";
+import ProjectPage from "./ProjectPage";
+import { getProject } from "./projects/projectsApi";
 
 type SessionState = "checking" | "signed-in" | "signed-out";
 
@@ -11,7 +14,40 @@ function GuestRoute({ session }: { session: SessionState }) {
 }
 
 function PrivateRoute({ session, guestPath }: { session: SessionState; guestPath: string }) {
-  return session === "signed-in" ? <Outlet /> : <Navigate to={guestPath} replace />;
+  const location = useLocation();
+  if (session === "signed-in") return <Outlet />;
+  if (location.pathname === "/") return <Navigate to={guestPath} replace />;
+  return <Navigate to="/signin" replace />;
+}
+
+function ProjectRoute() {
+  const { projectId } = useParams();
+  const [project, setProject] = useState<{ projectId: string; name: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!projectId) return;
+    let active = true;
+    setProject(null);
+    setError(null);
+    getProject(projectId)
+      .then((result) => {
+        if (active) setProject(result);
+      })
+      .catch((cause: unknown) => {
+        if (active) setError(cause instanceof Error ? cause.message : "Could not load project.");
+      });
+    return () => { active = false; };
+  }, [projectId]);
+
+  return (
+    <>
+      <p><Link to="/projects">Back to projects</Link></p>
+      {error && <p role="alert">{error}</p>}
+      {!project && !error && <p>Loading...</p>}
+      {project && <ProjectPage project={project} />}
+    </>
+  );
 }
 
 export default function App() {
@@ -37,7 +73,7 @@ export default function App() {
   if (session === "checking") return <p>Checking session...</p>;
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
         <Route element={<GuestRoute session={session} />}>
           <Route path="/signup" element={<SignUpPage />} />
@@ -50,9 +86,11 @@ export default function App() {
             setGuestPath("/signin");
             setSession("signed-out");
           }} />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:projectId" element={<ProjectRoute />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }

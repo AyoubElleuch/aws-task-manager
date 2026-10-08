@@ -111,3 +111,55 @@ p[role="alert"] {
   background: #fef2f2;
   color: #b91c1c;
 }
+
+.projects-list {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+
+.project-card {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.project-card h3 {
+  margin: 0;
+}
+
+.project-card dialog {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 20px;
+  color: inherit;
+}
+
+.project-card dialog::backdrop {
+  background: rgb(15 23 42 / 40%);
+}
+
+.create-project {
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.tasks-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.task-card span,
+.milestone-card span {
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
