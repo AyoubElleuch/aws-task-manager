@@ -38,7 +38,7 @@ export default function SignedInPage({ onSessionEnded }: { onSessionEnded: () =>
         if (active) setError(cause instanceof Error ? cause.message : "Could not load /me.");
       }
     }
-    
+
     void loadMe();
     return () => { active = false; };
   }, [onSessionEnded]);
@@ -53,11 +53,12 @@ export default function SignedInPage({ onSessionEnded }: { onSessionEnded: () =>
   }
 
   return (
-    <div>
-      <p>Signed in.</p>
-      {userId && <p>User ID: {userId}</p>}
+    <div className="welcome">
+      <h1>Welcome</h1>
+      <p className="muted">Manage your projects, milestones, and tasks.</p>
+      {userId && <p className="account-id">User ID: {userId}</p>}
       {error && <p role="alert">{error}</p>}
-      <p><Link to="/projects">Projects</Link></p>
+      <p><Link className="button primary" to="/projects">Open projects</Link></p>
       <button type="button" onClick={() => void handleSignOut()}>Sign out</button>
     </div>
   );

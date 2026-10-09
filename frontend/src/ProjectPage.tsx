@@ -55,12 +55,22 @@ export default function ProjectPage({ project }: { project: { projectId: string;
   return (
     <div className="project-page">
       <h1>{project.name}</h1>
+      <p className="muted">Break it down into milestones. Keep the next step close.</p>
+      <div className="stats" aria-label="Milestone statistics">
+        <span className="eyebrow">Milestones</span>
+        <strong>{loading || error ? "—" : milestones.length}</strong>
+      </div>
       {loading && <p>Loading...</p>}
       {error && <p role="alert">{error}</p>}
-      {!loading && !error && milestones.length === 0 && <p>No milestones yet.</p>}
-      <form className="create-milestone" onSubmit={async (event) => {
+      {!loading && !error && milestones.length === 0 && (
+        <div className="empty-state">
+          <h2>Start with a milestone.</h2>
+          <p className="muted">Give your project its first step below.</p>
+        </div>
+      )}
+      <form className="create-milestone create-form" onSubmit={async (event) => {
         event.preventDefault();
-        if (loading || creating) return;
+        if (loading || creating || !newMilestoneName.trim()) return;
         setCreating(true);
         setError(null);
         try {
@@ -76,25 +86,30 @@ export default function ProjectPage({ project }: { project: { projectId: string;
         <label htmlFor="new-milestone-name">New milestone</label>
         <input
           id="new-milestone-name"
+          placeholder="e.g. First release"
+          maxLength={200}
+          required
           value={newMilestoneName}
           onChange={(event) => setNewMilestoneName(event.target.value)}
         />
-        <button type="submit" disabled={loading || creating}>Create milestone</button>
+        <button type="submit" disabled={loading || creating || !newMilestoneName.trim()}>{creating ? "Creating…" : "Create milestone"}</button>
       </form>
-      
-      <ul>
+
+      <ul className="milestones-list">
         {!loading && milestones.map((milestone) => (
           <li key={milestone.milestoneId}>
-            <MilestoneCard
-              name={milestone.name}
-              onUpdate={name => void handleUpdate(milestone.milestoneId, name)}
-              onDelete={() => void handleDelete(milestone.milestoneId)}
-            />
-            <TaskList
-              key={`${project.projectId}:${milestone.milestoneId}`}
-              projectId={project.projectId}
-              milestoneId={milestone.milestoneId}
-            />
+            <details>
+              <MilestoneCard
+                name={milestone.name}
+                onUpdate={name => void handleUpdate(milestone.milestoneId, name)}
+                onDelete={() => void handleDelete(milestone.milestoneId)}
+              />
+              <TaskList
+                key={`${project.projectId}:${milestone.milestoneId}`}
+                projectId={project.projectId}
+                milestoneId={milestone.milestoneId}
+              />
+            </details>
           </li>
         ))}
       </ul>

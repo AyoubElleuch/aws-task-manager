@@ -80,8 +80,8 @@ export default function ConfirmEmailForm({
       <button type="button" onClick={handleResend} disabled={pending}>
         Resend Code
       </button>
-      {error && <p role="alert" style={{ color: "red" }}>{error}</p>}
-      {message && <p role="status" style={{ color: "green" }}>{message}</p>}
+      {error && <p role="alert">{error}</p>}
+      {message && <p role="status">{message}</p>}
     </form>
   );
 }

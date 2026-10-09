@@ -1,48 +1,44 @@
 import { useState } from "react";
 
-export default function MilestoneCard({
-  name,
-  onUpdate,
-  onDelete,
-}: {
+export default function MilestoneCard({ name, onUpdate, onDelete }: {
   name: string;
   onUpdate: (name: string) => void;
   onDelete: () => void;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [newName, setNewName] = useState(name);
-
-  const handleUpdate = () => {
-    onUpdate(newName.trim());
-    setIsEditing(false);
-  };
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
 
   return (
-    <div className="milestone-card">
-      {isEditing ? (
-        <input
-          aria-label="Milestone name"
-          autoFocus
-          value={newName}
-          onChange={(event) => setNewName(event.target.value)}
-          onBlur={handleUpdate}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") handleUpdate();
-          }}
-        />
-      ) : (
-        <span
-          onClick={() => {
-            setNewName(name);
-            setIsEditing(true);
-          }}
-        >
-          {name}
-        </span>
-      )}
-      <button type="button" onClick={onDelete}>
-        Delete
-      </button>
-    </div>
+    <>
+      <summary>
+        <span className="item-name">{name}</span>
+        {!editing && (
+          <span className="milestone-actions">
+            <button type="button" onClick={(event) => {
+              event.preventDefault();
+              event.currentTarget.closest("details")?.setAttribute("open", "");
+              setDraft(name);
+              setEditing(true);
+            }}>Edit</button>
+            <button className="danger" type="button" onClick={(event) => {
+              event.preventDefault();
+              onDelete();
+            }}>Delete</button>
+          </span>
+        )}
+      </summary>
+      {editing && <div className="milestone-card">
+        <form onSubmit={(event) => {
+          event.preventDefault();
+          if (!draft.trim()) return;
+          onUpdate(draft.trim());
+          setEditing(false);
+        }}>
+          <input aria-label="Milestone name" value={draft} onChange={(event) => setDraft(event.target.value)} autoFocus required maxLength={200} />
+          <button type="submit" disabled={!draft.trim() || draft.trim() === name}>Save</button>
+          <button type="button" onClick={() => setEditing(false)}>Cancel</button>
+        </form>
+      </div>}
+    </>
   );
 }
