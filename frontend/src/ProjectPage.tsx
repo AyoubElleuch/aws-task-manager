@@ -57,10 +57,8 @@ export default function ProjectPage({ project }: { project: { projectId: string;
       <h1>{project.name}</h1>
       <p className="muted">Break it down into milestones. Keep the next step close.</p>
       <div className="stats" aria-label="Milestone statistics">
-        <div>
-          <span className="eyebrow">Milestones</span>
-          <strong>{loading || error ? "—" : milestones.length}</strong>
-        </div>
+        <span className="eyebrow">Milestones</span>
+        <strong>{loading || error ? "—" : milestones.length}</strong>
       </div>
       {loading && <p>Loading...</p>}
       {error && <p role="alert">{error}</p>}
@@ -100,16 +98,18 @@ export default function ProjectPage({ project }: { project: { projectId: string;
       <ul className="milestones-list">
         {!loading && milestones.map((milestone) => (
           <li key={milestone.milestoneId}>
-            <MilestoneCard
-              name={milestone.name}
-              onUpdate={name => void handleUpdate(milestone.milestoneId, name)}
-              onDelete={() => void handleDelete(milestone.milestoneId)}
-            />
-            <TaskList
-              key={`${project.projectId}:${milestone.milestoneId}`}
-              projectId={project.projectId}
-              milestoneId={milestone.milestoneId}
-            />
+            <details>
+              <MilestoneCard
+                name={milestone.name}
+                onUpdate={name => void handleUpdate(milestone.milestoneId, name)}
+                onDelete={() => void handleDelete(milestone.milestoneId)}
+              />
+              <TaskList
+                key={`${project.projectId}:${milestone.milestoneId}`}
+                projectId={project.projectId}
+                milestoneId={milestone.milestoneId}
+              />
+            </details>
           </li>
         ))}
       </ul>

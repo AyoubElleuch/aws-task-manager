@@ -9,8 +9,25 @@ export default function MilestoneCard({ name, onUpdate, onDelete }: {
   const [draft, setDraft] = useState(name);
 
   return (
-    <div className="milestone-card">
-      {editing ? (
+    <>
+      <summary>
+        <span className="item-name">{name}</span>
+        {!editing && (
+          <span className="milestone-actions">
+            <button type="button" onClick={(event) => {
+              event.preventDefault();
+              event.currentTarget.closest("details")?.setAttribute("open", "");
+              setDraft(name);
+              setEditing(true);
+            }}>Edit</button>
+            <button className="danger" type="button" onClick={(event) => {
+              event.preventDefault();
+              onDelete();
+            }}>Delete</button>
+          </span>
+        )}
+      </summary>
+      {editing && <div className="milestone-card">
         <form onSubmit={(event) => {
           event.preventDefault();
           if (!draft.trim()) return;
@@ -21,16 +38,7 @@ export default function MilestoneCard({ name, onUpdate, onDelete }: {
           <button type="submit" disabled={!draft.trim() || draft.trim() === name}>Save</button>
           <button type="button" onClick={() => setEditing(false)}>Cancel</button>
         </form>
-      ) : (
-        <>
-          <span className="item-name">{name}</span>
-          <button type="button" onClick={() => {
-            setDraft(name);
-            setEditing(true);
-          }}>Edit</button>
-          <button className="danger" type="button" onClick={onDelete}>Delete</button>
-        </>
-      )}
-    </div>
+      </div>}
+    </>
   );
 }

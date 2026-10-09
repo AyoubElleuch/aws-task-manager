@@ -48,10 +48,8 @@ export default function ProjectsPage() {
       <h1>Projects</h1>
       <p className="muted">Keep your work clear, one project at a time.</p>
       <div className="stats" aria-label="Project statistics">
-        <div>
-          <span className="eyebrow">Total projects</span>
-          <strong>{loading || error ? "—" : projects.length}</strong>
-        </div>
+        <span className="eyebrow">Total projects</span>
+        <strong>{loading || error ? "—" : projects.length}</strong>
       </div>
       {loading && <p>Loading...</p>}
       {error && <p role="alert">{error}</p>}

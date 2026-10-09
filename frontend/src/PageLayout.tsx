@@ -31,8 +31,17 @@ export default function PageLayout({ guest = false }: { guest?: boolean }) {
             </div>
           </div>
           <nav aria-label="Main navigation">
-            {guest ? <><NavLink to="/signin">Sign in</NavLink><NavLink to="/signup">Create account</NavLink></> :
-              <><NavLink to="/" end>Overview</NavLink><NavLink to="/projects">Projects</NavLink></>}
+            {guest ? (
+              <>
+                <NavLink to="/signin">Sign in</NavLink>
+                <NavLink to="/signup">Create account</NavLink>
+              </>
+            ) : (
+              <>
+                <NavLink to="/" end>Overview</NavLink>
+                <NavLink to="/projects">Projects</NavLink>
+              </>
+            )}
           </nav>
         </div>
       </header>

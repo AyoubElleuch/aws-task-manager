@@ -30,9 +30,13 @@ export default function TaskList({ projectId, milestoneId }: { projectId: string
     };
   }, [projectId, milestoneId]);
 
+  let heading = "Tasks";
+  if (loading) heading = "Loading tasks…";
+  else if (!error) heading = tasks.length === 1 ? "1 task" : `${tasks.length} tasks`;
+
   return (
     <div className="task-section">
-      <p className="eyebrow">{loading ? "Loading tasks…" : error ? "Tasks" : `${tasks.length} ${tasks.length === 1 ? "task" : "tasks"}`}</p>
+      <p className="eyebrow">{heading}</p>
       {error && <p role="alert">{error}</p>}
       {!loading && !error && tasks.length === 0 && <p className="muted">No tasks yet. Add your next step.</p>}
       <ul className="tasks-list" aria-label="Tasks">
@@ -41,9 +45,8 @@ export default function TaskList({ projectId, milestoneId }: { projectId: string
             <TaskCard
               name={task.name}
               onUpdate={name => {
-                if (!name.trim()) return;
                 setError("");
-                updateTask({ projectId, milestoneId, taskId: task.taskId, name: name.trim() })
+                updateTask({ projectId, milestoneId, taskId: task.taskId, name })
                   .then(updated => setTasks(current => current.map(item => item.taskId === task.taskId ? updated : item)))
                   .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Could not update task."));
               }}
