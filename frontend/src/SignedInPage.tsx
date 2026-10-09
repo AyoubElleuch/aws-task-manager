@@ -54,7 +54,8 @@ export default function SignedInPage({ onSessionEnded }: { onSessionEnded: () =>
 
   return (
     <div className="welcome">
-      <p className="eyebrow">Your workspace</p><h1>Good work starts here.</h1><p className="muted">One place for your projects, milestones, and the small steps in between.</p>
+      <h1>Welcome</h1>
+      <p className="muted">Manage your projects, milestones, and tasks.</p>
       {userId && <p className="account-id">User ID: {userId}</p>}
       {error && <p role="alert">{error}</p>}
       <p><Link className="button primary" to="/projects">Open projects</Link></p>

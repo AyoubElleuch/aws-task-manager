@@ -54,14 +54,12 @@ export default function ProjectPage({ project }: { project: { projectId: string;
 
   return (
     <div className="project-page">
-      <p className="eyebrow">Project workspace</p>
       <h1>{project.name}</h1>
       <p className="muted">Break it down into milestones. Keep the next step close.</p>
       <div className="stats" aria-label="Milestone statistics">
         <div>
           <span className="eyebrow">Milestones</span>
           <strong>{loading || error ? "—" : milestones.length}</strong>
-          <span className="muted">In this project</span>
         </div>
       </div>
       {loading && <p>Loading...</p>}

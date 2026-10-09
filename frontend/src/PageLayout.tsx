@@ -37,7 +37,12 @@ export default function PageLayout({ guest = false }: { guest?: boolean }) {
         </div>
       </header>
       <main id="main" className={guest ? "auth-layout" : "workspace"}>
-        {guest && <><p className="eyebrow">Your workspace</p><h1>{title}</h1><p className="muted">{description}</p></>}
+        {guest && (
+          <>
+            <h1>{title}</h1>
+            <p className="muted">{description}</p>
+          </>
+        )}
         <Outlet />
       </main>
     </>

@@ -45,14 +45,12 @@ export default function ProjectsPage() {
 
   return (
     <div className="projects-page">
-      <p className="eyebrow">The bigger picture</p>
       <h1>Projects</h1>
       <p className="muted">Keep your work clear, one project at a time.</p>
       <div className="stats" aria-label="Project statistics">
         <div>
           <span className="eyebrow">Total projects</span>
           <strong>{loading || error ? "—" : projects.length}</strong>
-          <span className="muted">In your workspace</span>
         </div>
       </div>
       {loading && <p>Loading...</p>}
@@ -60,7 +58,7 @@ export default function ProjectsPage() {
       <div className="projects-list">
         {!loading && !error && projects.length === 0 && (
           <div className="empty-state">
-            <h2>A clean slate.</h2>
+            <h2>No projects yet.</h2>
             <p className="muted">Create your first project below to get started.</p>
           </div>
         )}
