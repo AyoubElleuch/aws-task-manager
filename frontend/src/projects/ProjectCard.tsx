@@ -20,6 +20,7 @@ export default function ProjectCard({ projectId, name, onUpdate, onDelete }: { p
         </form>
       ) : (
         <>
+          <p className="eyebrow">Project</p>
           <h3><Link to={`/projects/${encodeURIComponent(projectId)}`}>{name}</Link></h3>
           <button type="button" onClick={() => {
             setDraft(name);
@@ -27,7 +28,7 @@ export default function ProjectCard({ projectId, name, onUpdate, onDelete }: { p
           }}>Edit</button>
         </>
       )}
-      <button type="button" onClick={() => deleteDialog.current?.showModal()}>Delete</button>
+      <button type="button" className="danger" onClick={() => deleteDialog.current?.showModal()}>Delete</button>
       <dialog ref={deleteDialog} aria-label={`Delete ${name}`}>
         <p>Are you sure you want to delete "{name}"?</p>
         <button type="button" onClick={() => deleteDialog.current?.close()}>Cancel</button>

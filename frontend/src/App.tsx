@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useParams } from "react-router";
 import { getSession } from "./auth/auth";
 import { ConfirmEmailPage, ResetPasswordPage, SignInPage, SignUpPage } from "./auth/AuthPages";
+import PageLayout from "./PageLayout";
 import SignedInPage from "./SignedInPage";
 import ProjectsPage from "./ProjectsPage";
 import ProjectPage from "./ProjectPage";
@@ -56,7 +57,7 @@ export default function App() {
 
   useEffect(() => {
     let active = true;
-    
+
     void getSession()
       .then((result) => {
         if (active) setSession(result.tokens?.accessToken ? "signed-in" : "signed-out");
@@ -76,18 +77,22 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<GuestRoute session={session} />}>
-          <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-          <Route path="/signin" element={<SignInPage onSignedIn={() => setSession("signed-in")} />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route element={<PageLayout guest />}>
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+            <Route path="/signin" element={<SignInPage onSignedIn={() => setSession("signed-in")} />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+          </Route>
         </Route>
         <Route element={<PrivateRoute session={session} guestPath={guestPath} />}>
-          <Route path="/" element={<SignedInPage onSessionEnded={() => {
-            setGuestPath("/signin");
-            setSession("signed-out");
-          }} />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/projects/:projectId" element={<ProjectRoute />} />
+          <Route element={<PageLayout />}>
+            <Route path="/" element={<SignedInPage onSessionEnded={() => {
+              setGuestPath("/signin");
+              setSession("signed-out");
+            }} />} />
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects/:projectId" element={<ProjectRoute />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
