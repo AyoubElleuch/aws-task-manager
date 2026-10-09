@@ -9,21 +9,32 @@ export default function TaskList({ projectId, milestoneId }: { projectId: string
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setError("");
     fetchTasks({ projectId, milestoneId })
-      .then(items => { if (active) setTasks(items); })
-      .catch(console.error)
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+      .then(items => {
+        if (active) setTasks(items);
+      })
+      .catch((cause: unknown) => {
+        if (active) setError(cause instanceof Error ? cause.message : "Could not load tasks.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [projectId, milestoneId]);
 
   return (
     <div className="task-section">
-      <p className="eyebrow">{loading ? "Loading tasks…" : `${tasks.length} tasks`}</p>
-      {!loading && tasks.length === 0 && <p className="muted">No tasks yet. Add your next step.</p>}
+      <p className="eyebrow">{loading ? "Loading tasks…" : error ? "Tasks" : `${tasks.length} ${tasks.length === 1 ? "task" : "tasks"}`}</p>
+      {error && <p role="alert">{error}</p>}
+      {!loading && !error && tasks.length === 0 && <p className="muted">No tasks yet. Add your next step.</p>}
       <ul className="tasks-list" aria-label="Tasks">
         {tasks.map(task => (
           <li key={task.taskId}>
@@ -31,13 +42,17 @@ export default function TaskList({ projectId, milestoneId }: { projectId: string
               name={task.name}
               onUpdate={name => {
                 if (!name.trim()) return;
+                setError("");
                 updateTask({ projectId, milestoneId, taskId: task.taskId, name: name.trim() })
                   .then(updated => setTasks(current => current.map(item => item.taskId === task.taskId ? updated : item)))
-                  .catch(console.error);
+                  .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Could not update task."));
               }}
-              onDelete={() => deleteTask({ projectId, milestoneId, taskId: task.taskId })
-                .then(() => setTasks(current => current.filter(item => item.taskId !== task.taskId)))
-                .catch(console.error)}
+              onDelete={() => {
+                setError("");
+                void deleteTask({ projectId, milestoneId, taskId: task.taskId })
+                  .then(() => setTasks(current => current.filter(item => item.taskId !== task.taskId)))
+                  .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Could not delete task."));
+              }}
             />
           </li>
         ))}
@@ -46,12 +61,13 @@ export default function TaskList({ projectId, milestoneId }: { projectId: string
         event.preventDefault();
         if (loading || creating || !name.trim()) return;
         setCreating(true);
+        setError("");
         try {
           const task = await createTask({ projectId, milestoneId, name: name.trim() });
           setTasks(current => current.concat(task));
           setName("");
         } catch (cause) {
-          console.error(cause);
+          setError(cause instanceof Error ? cause.message : "Could not create task.");
         } finally {
           setCreating(false);
         }
