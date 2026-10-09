@@ -162,10 +162,31 @@ form button[type="submit"] {
   color: #303030;
 }
 
-.brand span {
-  font: 18px monospace;
-  margin-right: 10px;
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.technology-logos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 16px;
+  border-right: 1px solid #e4e4e4;
+  flex-shrink: 0;
+}
+
+.technology-logos img {
+  display: block;
+  object-fit: contain;
+}
+
+.brand-caption {
+  margin: 2px 0 0;
   color: #707070;
+  font-size: 11px;
 }
 
 nav {
@@ -262,8 +283,18 @@ p[role="status"] {
     width: calc(100% - 32px);
     min-height: 72px;
     flex-wrap: wrap;
-    gap: 0 16px;
-    padding: 12px 0;
+    gap: 8px 16px;
+    padding: 16px 0;
+  }
+
+  .brand-group {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .technology-logos {
+    gap: 8px;
+    padding-right: 12px;
   }
 
   nav {

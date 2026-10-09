@@ -20,7 +20,16 @@ export default function PageLayout({ guest = false }: { guest?: boolean }) {
       <a className="skip-link" href="#main">Skip to content</a>
       <header className="site-header">
         <div className="header-inner">
-          <NavLink className="brand" to="/"><span aria-hidden="true">[ / ]</span>Task Manager</NavLink>
+          <div className="brand-group">
+            <div className="technology-logos">
+              <img src="/logos/aws.svg" alt="AWS" width="42" height="32" />
+              <img src="/logos/terraform.svg" alt="Terraform" width="26" height="30" />
+            </div>
+            <div>
+              <NavLink className="brand" to="/">Task Manager</NavLink>
+              <p className="brand-caption">AWS &amp; Terraform · Cloud skills in practice</p>
+            </div>
+          </div>
           <nav aria-label="Main navigation">
             {guest ? <><NavLink to="/signin">Sign in</NavLink><NavLink to="/signup">Create account</NavLink></> :
               <><NavLink to="/" end>Overview</NavLink><NavLink to="/projects">Projects</NavLink></>}
