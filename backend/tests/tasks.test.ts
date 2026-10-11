@@ -38,6 +38,7 @@ const task = {
   projectId: "project-1",
   milestoneId: "milestone-1",
   name: "Write spec",
+  completed: false,
 };
 
 test("requires an authenticated user", async () => {
@@ -100,7 +101,7 @@ test("GET lists all pages and retrieves one task", async () => {
 test("POST creates a task and trims its name", async () => {
   mockDb({ Item: project }, { Item: milestone }, {});
 
-  const response = await handler(event("POST", undefined, '{"name":" Write spec "}'));
+  const response = await handler(event("POST", undefined, '{"name":" Write spec ","completed":false}'));
   const created = JSON.parse(response.body ?? "");
 
   expect(response.statusCode).toBe(201);
@@ -123,18 +124,20 @@ test("POST rejects an empty name", async () => {
   expect(send).toHaveBeenCalledTimes(2);
 });
 
-test("PATCH renames a task", async () => {
-  const updated = { ...task, name: "Review spec" };
+test.each([false, true])("PATCH renames a task and sets completed to %s", async (completed) => {
+  const updated = { ...task, name: "Review spec", completed };
   mockDb({ Item: project }, { Item: milestone }, { Attributes: updated });
 
-  const response = await handler(event("PATCH", "task-1", '{"name":"Review spec"}'));
+  const response = await handler(event("PATCH", "task-1", JSON.stringify({ name: "Review spec", completed })));
 
   expect(response.statusCode).toBe(200);
   expect(JSON.parse(response.body ?? "")).toEqual({ task: updated });
   expect(send.mock.calls[2][0]).toMatchObject({
     input: {
       Key: { milestoneKey: task.milestoneKey, taskId: task.taskId },
-      ExpressionAttributeValues: { ":name": "Review spec" },
+      UpdateExpression: "SET #name = :name, #completed = :completed",
+      ExpressionAttributeNames: { "#name": "name", "#completed": "completed" },
+      ExpressionAttributeValues: { ":name": "Review spec", ":completed": completed },
     },
   });
 });
