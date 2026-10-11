@@ -448,6 +448,38 @@ dialog button {
   padding: 8px 16px 12px;
 }
 
+.task-card {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto auto;
+  gap: 8px 12px;
+}
+
+.task-card > .item-name {
+  grid-column: 2;
+}
+
+.task-card > input[type="checkbox"] {
+  grid-column: 1;
+  grid-row: 1;
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: #303030;
+  cursor: pointer;
+}
+
+.task-card:has(> input[type="checkbox"]:checked) > .item-name {
+  color: #707070;
+  text-decoration: line-through;
+}
+
+.task-card > form {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
 .tasks-list {
   margin: 8px 0;
 }
@@ -573,7 +605,19 @@ dialog button {
     grid-template-columns: 1fr;
   }
 
-  .task-card {
-    flex-wrap: wrap;
+  .task-card > .item-name {
+    grid-column: 2 / -1;
+  }
+
+  .task-card > button {
+    grid-row: 2;
+  }
+
+  .task-card > button:not(.danger) {
+    grid-column: 3;
+  }
+
+  .task-card > button.danger {
+    grid-column: 4;
   }
 }
