@@ -111,8 +111,10 @@ export async function handler(
     }
     const name = input.name.trim();
 
+    const { completed } = input as { name: string; completed: boolean };
+
     if (method === "POST") {
-      const task = { milestoneKey, taskId: randomUUID(), projectId, milestoneId, name };
+      const task = { milestoneKey, taskId: randomUUID(), projectId, milestoneId, name, completed };
       try {
         await db.send(new PutCommand({
           TableName: tasksTable,
@@ -132,9 +134,9 @@ export async function handler(
       const result = await db.send(new UpdateCommand({
         TableName: tasksTable,
         Key: { milestoneKey, taskId },
-        UpdateExpression: "SET #name = :name",
-        ExpressionAttributeNames: { "#name": "name" },
-        ExpressionAttributeValues: { ":name": name },
+        UpdateExpression: "SET #name = :name, #completed = :completed",
+        ExpressionAttributeNames: { "#name": "name", "#completed": "completed" },
+        ExpressionAttributeValues: { ":name": name, ":completed": completed },
         ConditionExpression: "attribute_exists(milestoneKey) AND attribute_exists(taskId)",
         ReturnValues: "ALL_NEW",
       }));
