@@ -4,7 +4,12 @@ import { createTask, deleteTask, fetchTasks, updateTask } from "./tasksApi";
 
 type Task = { taskId: string; name: string; completed: boolean };
 
-export default function TaskList({ projectId, milestoneId }: { projectId: string; milestoneId: string }) {
+export default function TaskList({ projectId, milestoneId, milestoneCompleted, onChange }: {
+  projectId: string;
+  milestoneId: string;
+  milestoneCompleted: boolean;
+  onChange: () => Promise<void>;
+}) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -28,7 +33,7 @@ export default function TaskList({ projectId, milestoneId }: { projectId: string
     return () => {
       active = false;
     };
-  }, [projectId, milestoneId]);
+  }, [projectId, milestoneId, milestoneCompleted]);
 
   let heading = "Tasks";
   if (loading) heading = "Loading tasks…";
@@ -49,12 +54,14 @@ export default function TaskList({ projectId, milestoneId }: { projectId: string
                 setError("");
                 updateTask({ projectId, milestoneId, taskId: task.taskId, name, completed })
                   .then(updated => setTasks(current => current.map(item => item.taskId === task.taskId ? updated : item)))
+                  .then(onChange)
                   .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Could not update task."));
               }}
               onDelete={() => {
                 setError("");
                 void deleteTask({ projectId, milestoneId, taskId: task.taskId })
                   .then(() => setTasks(current => current.filter(item => item.taskId !== task.taskId)))
+                  .then(onChange)
                   .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Could not delete task."));
               }}
             />
@@ -70,6 +77,7 @@ export default function TaskList({ projectId, milestoneId }: { projectId: string
           const task = await createTask({ projectId, milestoneId, name: name.trim() });
           setTasks(current => current.concat(task));
           setName("");
+          await onChange();
         } catch (cause) {
           setError(cause instanceof Error ? cause.message : "Could not create task.");
         } finally {
