@@ -26,7 +26,7 @@ function event(method: string, projectId = "project-1", milestoneId?: string, bo
 }
 
 const project = { userId: "user-123", projectId: "project-1", name: "Home" };
-const milestone = { projectId: "project-1", milestoneId: "milestone-1", name: "Plan" };
+const milestone = { projectId: "project-1", milestoneId: "milestone-1", name: "Plan", completed: false };
 
 test("does not allow access to a project the user does not own", async () => {
   mockDb({});
@@ -50,11 +50,11 @@ test("GET lists milestones and retrieves one milestone", async () => {
 test("POST creates a milestone without overwriting the same key", async () => {
   mockDb({ Item: project }, {});
 
-  const response = await handler(event("POST", "project-1", undefined, JSON.stringify({ name: " Plan " })));
+  const response = await handler(event("POST", "project-1", undefined, JSON.stringify({ name: " Plan ", completed: false })));
   const created = JSON.parse(response.body ?? "");
 
   expect(response.statusCode).toBe(201);
-  expect(created).toEqual({ projectId: "project-1", milestoneId: expect.any(String), name: "Plan" });
+  expect(created).toEqual({ ...milestone, milestoneId: expect.any(String) });
   expect(send.mock.calls[1][0]).toMatchObject({
     input: {
       TableName: "test-milestones",
@@ -64,17 +64,19 @@ test("POST creates a milestone without overwriting the same key", async () => {
   });
 });
 
-test("PATCH renames a milestone", async () => {
-  const updated = { ...milestone, name: "Build" };
+test.each([false, true])("PATCH renames a milestone and sets completed to %s", async (completed) => {
+  const updated = { ...milestone, name: "Build", completed };
   mockDb({ Item: project }, { Attributes: updated });
 
-  const response = await handler(event("PATCH", "project-1", "milestone-1", JSON.stringify({ name: "Build" })));
+  const response = await handler(event("PATCH", "project-1", "milestone-1", JSON.stringify({ name: "Build", completed })));
 
   expect(JSON.parse(response.body ?? "")).toEqual({ milestone: updated });
   expect(send.mock.calls[1][0]).toMatchObject({
     input: {
       Key: { projectId: "project-1", milestoneId: "milestone-1" },
-      ExpressionAttributeValues: { ":name": "Build" },
+      UpdateExpression: "SET #name = :name, #completed = :completed",
+      ExpressionAttributeNames: { "#name": "name", "#completed": "completed" },
+      ExpressionAttributeValues: { ":name": "Build", ":completed": completed },
     },
   });
 });

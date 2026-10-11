@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import TaskCard from "./TaskCard";
 import { createTask, deleteTask, fetchTasks, updateTask } from "./tasksApi";
 
-type Task = { taskId: string; name: string };
+type Task = { taskId: string; name: string; completed: boolean };
 
 export default function TaskList({ projectId, milestoneId }: { projectId: string; milestoneId: string }) {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -44,9 +44,10 @@ export default function TaskList({ projectId, milestoneId }: { projectId: string
           <li key={task.taskId}>
             <TaskCard
               name={task.name}
-              onUpdate={name => {
+              completed={task.completed ?? false}
+              onUpdate={(name: string, completed: boolean) => {
                 setError("");
-                updateTask({ projectId, milestoneId, taskId: task.taskId, name })
+                updateTask({ projectId, milestoneId, taskId: task.taskId, name, completed })
                   .then(updated => setTasks(current => current.map(item => item.taskId === task.taskId ? updated : item)))
                   .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Could not update task."));
               }}
