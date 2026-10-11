@@ -109,6 +109,8 @@ export default function ProjectPage({ project }: { project: { projectId: string;
                 key={`${project.projectId}:${milestone.milestoneId}`}
                 projectId={project.projectId}
                 milestoneId={milestone.milestoneId}
+                milestoneCompleted={milestone.completed ?? false}
+                onChange={async () => setMilestones(await fetchMilestones({ projectId: project.projectId }))}
               />
             </details>
           </li>

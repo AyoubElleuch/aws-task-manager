@@ -99,7 +99,7 @@ test("GET lists all pages and retrieves one task", async () => {
 });
 
 test("POST creates a task and trims its name", async () => {
-  mockDb({ Item: project }, { Item: milestone }, {});
+  mockDb({ Item: project }, { Item: { ...milestone, completed: true } }, {}, { Items: [task] });
 
   const response = await handler(event("POST", undefined, '{"name":" Write spec ","completed":false}'));
   const created = JSON.parse(response.body ?? "");
@@ -112,6 +112,9 @@ test("POST creates a task and trims its name", async () => {
       Item: created,
       ConditionExpression: "attribute_not_exists(milestoneKey)",
     },
+  });
+  expect(send.mock.calls[4][0]).toMatchObject({
+    input: { TableName: "test-milestones", ExpressionAttributeValues: { ":completed": false } },
   });
 });
 
@@ -126,7 +129,7 @@ test("POST rejects an empty name", async () => {
 
 test.each([false, true])("PATCH renames a task and sets completed to %s", async (completed) => {
   const updated = { ...task, name: "Review spec", completed };
-  mockDb({ Item: project }, { Item: milestone }, { Attributes: updated });
+  mockDb({ Item: project }, { Item: { ...milestone, completed: !completed } }, { Attributes: updated }, { Items: [updated] });
 
   const response = await handler(event("PATCH", "task-1", JSON.stringify({ name: "Review spec", completed })));
 
@@ -140,10 +143,14 @@ test.each([false, true])("PATCH renames a task and sets completed to %s", async 
       ExpressionAttributeValues: { ":name": "Review spec", ":completed": completed },
     },
   });
+  expect(send.mock.calls[3][0]).toMatchObject({ input: { ConsistentRead: true } });
+  expect(send.mock.calls[4][0]).toMatchObject({
+    input: { TableName: "test-milestones", Key: { projectId: "project-1", milestoneId: "milestone-1" }, ExpressionAttributeValues: { ":completed": completed } },
+  });
 });
 
-test("DELETE removes a task", async () => {
-  mockDb({ Item: project }, { Item: milestone }, {});
+test("DELETE leaves an empty milestone incomplete", async () => {
+  mockDb({ Item: project }, { Item: milestone }, {}, { Items: [] });
 
   const response = await handler(event("DELETE", "task-1"));
 
@@ -151,4 +158,26 @@ test("DELETE removes a task", async () => {
   expect(send.mock.calls[2][0]).toMatchObject({
     input: { Key: { milestoneKey: task.milestoneKey, taskId: task.taskId } },
   });
+  expect(send.mock.calls[4][0]).toMatchObject({ input: { ExpressionAttributeValues: { ":completed": false } } });
+});
+
+test("DELETE completes a milestone when all remaining tasks are complete", async () => {
+  mockDb({ Item: project }, { Item: milestone }, {}, { Items: [{ ...task, completed: true }] });
+
+  const response = await handler(event("DELETE", "task-2"));
+
+  expect(response.statusCode).toBe(200);
+  expect(send.mock.calls[4][0]).toMatchObject({ input: { ExpressionAttributeValues: { ":completed": true } } });
+});
+
+test("PATCH keeps a milestone incomplete when a later task page is incomplete", async () => {
+  const updated = { ...task, completed: true };
+  const key = { milestoneKey: task.milestoneKey, taskId: task.taskId };
+  mockDb({ Item: project }, { Item: milestone }, { Attributes: updated },
+    { Items: [updated], LastEvaluatedKey: key }, { Items: [{ ...task, taskId: "task-2" }] });
+
+  await handler(event("PATCH", "task-1", JSON.stringify({ name: task.name, completed: true })));
+
+  expect(send.mock.calls[4][0]).toMatchObject({ input: { ExclusiveStartKey: key, ConsistentRead: true } });
+  expect(send.mock.calls[5][0]).toMatchObject({ input: { ExpressionAttributeValues: { ":completed": false } } });
 });

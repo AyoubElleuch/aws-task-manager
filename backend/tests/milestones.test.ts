@@ -64,21 +64,58 @@ test("POST creates a milestone without overwriting the same key", async () => {
   });
 });
 
-test.each([false, true])("PATCH renames a milestone and sets completed to %s", async (completed) => {
-  const updated = { ...milestone, name: "Build", completed };
-  mockDb({ Item: project }, { Attributes: updated });
+test("PATCH completes a milestone and all its task pages", async () => {
+  const updated = { ...milestone, name: "Build", completed: true };
+  const key = { milestoneKey: "project-1#milestone-1", taskId: "task-1" };
+  const second = { ...key, taskId: "task-2" };
+  mockDb({ Item: project }, { Item: milestone }, { Items: [key], LastEvaluatedKey: key },
+    { Items: [second] }, {}, {}, { Attributes: updated });
 
-  const response = await handler(event("PATCH", "project-1", "milestone-1", JSON.stringify({ name: "Build", completed })));
+  const response = await handler(event("PATCH", "project-1", "milestone-1", JSON.stringify(updated)));
 
   expect(JSON.parse(response.body ?? "")).toEqual({ milestone: updated });
-  expect(send.mock.calls[1][0]).toMatchObject({
+  expect(send.mock.calls[6][0]).toMatchObject({
     input: {
       Key: { projectId: "project-1", milestoneId: "milestone-1" },
       UpdateExpression: "SET #name = :name, #completed = :completed",
       ExpressionAttributeNames: { "#name": "name", "#completed": "completed" },
-      ExpressionAttributeValues: { ":name": "Build", ":completed": completed },
+      ExpressionAttributeValues: { ":name": "Build", ":completed": true },
     },
   });
+  expect(send).toHaveBeenCalledTimes(7);
+  expect(send.mock.calls[3][0]).toMatchObject({ input: { ConsistentRead: true, ExclusiveStartKey: key } });
+  expect(send.mock.calls[4][0]).toMatchObject({ input: { TableName: "test-tasks", Key: key, ExpressionAttributeValues: { ":completed": true } } });
+  expect(send.mock.calls[5][0]).toMatchObject({ input: { TableName: "test-tasks", Key: second, ExpressionAttributeValues: { ":completed": true } } });
+});
+
+test("PATCH reopens a milestone without changing its tasks", async () => {
+  mockDb({ Item: project }, { Attributes: milestone });
+
+  const response = await handler(event("PATCH", "project-1", "milestone-1", JSON.stringify(milestone)));
+
+  expect(JSON.parse(response.body ?? "")).toEqual({ milestone });
+  expect(send).toHaveBeenCalledTimes(2);
+  expect(send.mock.calls[1][0]).toMatchObject({ input: { ExpressionAttributeValues: { ":name": "Plan", ":completed": false } } });
+});
+
+test("does not complete tasks for a missing milestone", async () => {
+  mockDb({ Item: project }, {});
+
+  const response = await handler(event("PATCH", "project-1", "missing", JSON.stringify({ name: "Plan", completed: true })));
+
+  expect(response.statusCode).toBe(404);
+  expect(send).toHaveBeenCalledTimes(2);
+});
+
+test("does not mark the milestone complete when a task update fails", async () => {
+  mockDb({});
+  send.mockResolvedValueOnce({ Item: project });
+  send.mockResolvedValueOnce({ Item: milestone });
+  send.mockResolvedValueOnce({ Items: [{ taskId: "task-1" }] });
+  send.mockRejectedValueOnce(new Error("Task update failed"));
+
+  await expect(handler(event("PATCH", "project-1", "milestone-1", JSON.stringify({ name: "Plan", completed: true })))).rejects.toThrow("Task update failed");
+  expect(send).toHaveBeenCalledTimes(4);
 });
 
 test("DELETE removes a milestone", async () => {
