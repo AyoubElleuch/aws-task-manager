@@ -14,6 +14,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 
 import { deleteTasks } from "./deleteTasks.js";
+import { getTasks } from "./getTasks.js";
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -69,6 +70,7 @@ export async function handler(
         TableName: milestonesTable,
         KeyConditionExpression: "projectId = :projectId",
         ExpressionAttributeValues: { ":projectId": projectId },
+        ConsistentRead: true,
         ExclusiveStartKey: lastKey,
       }));
       milestones.push(...(page.Items ?? []));
@@ -119,6 +121,32 @@ export async function handler(
     }
 
     try {
+      if (completed) {
+        const tasksTable = process.env.TASKS_TABLE;
+        if (!tasksTable) throw new Error("TASKS_TABLE is missing");
+
+        const milestone = await db.send(new GetCommand({
+          TableName: milestonesTable,
+          Key: { projectId, milestoneId },
+          ConsistentRead: true,
+        }));
+        if (!milestone.Item) return json(404, { message: "Milestone not found" });
+
+        const milestoneKey = `${projectId}#${milestoneId}`;
+        const tasks = await getTasks(db, tasksTable, milestoneKey);
+        
+        for (const task of tasks) {
+          await db.send(new UpdateCommand({
+            TableName: tasksTable,
+            Key: { milestoneKey, taskId: task.taskId },
+            UpdateExpression: "SET #completed = :completed",
+            ExpressionAttributeNames: { "#completed": "completed" },
+            ExpressionAttributeValues: { ":completed": true },
+            ConditionExpression: "attribute_exists(milestoneKey) AND attribute_exists(taskId)",
+          }));
+        }
+      }
+
       const result = await db.send(new UpdateCommand({
         TableName: milestonesTable,
         Key: { projectId, milestoneId },
@@ -128,6 +156,7 @@ export async function handler(
         ConditionExpression: "attribute_exists(projectId)",
         ReturnValues: "ALL_NEW",
       }));
+
       return json(200, { milestone: result.Attributes });
     } catch (error) {
       if (error instanceof ConditionalCheckFailedException) {
