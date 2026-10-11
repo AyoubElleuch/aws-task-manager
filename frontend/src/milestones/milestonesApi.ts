@@ -27,7 +27,7 @@ export async function createMilestone({ projectId, name } : { projectId: string,
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, completed: false }),
     });
     if (!response.ok) throw new Error(`/project/${projectId} return ${response.status}`);
 
@@ -47,7 +47,7 @@ export async function deleteMilestone({ projectId, milestoneId }: { projectId: s
   if (!response.ok) throw new Error(`/milestones/${milestoneId} returned ${response.status}.`);
 }
 
-export async function updateMilestone({ projectId, milestoneId, name }: { projectId: string; milestoneId: string; name: string }) {
+export async function updateMilestone({ projectId, milestoneId, name, completed }: { projectId: string; milestoneId: string; name: string; completed: boolean }) {
   const token = await getToken();
   const response = await fetch(`${getMilestonesUrl(projectId)}&milestoneId=${encodeURIComponent(milestoneId)}`, {
     method: "PATCH",
@@ -55,7 +55,7 @@ export async function updateMilestone({ projectId, milestoneId, name }: { projec
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, completed }),
   });
   if (!response.ok) throw new Error(`/milestones/${milestoneId} returned ${response.status}.`);
 

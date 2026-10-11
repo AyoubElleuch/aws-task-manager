@@ -4,7 +4,7 @@ import { fetchMilestones, createMilestone, deleteMilestone, updateMilestone } fr
 import MilestoneCard from "./milestones/MilestoneCard";
 import TaskList from "./tasks/TaskList";
 
-type Milestone = { projectId: string; milestoneId: string; name: string };
+type Milestone = { projectId: string; milestoneId: string; name: string; completed: boolean };
 
 export default function ProjectPage({ project }: { project: { projectId: string; name: string } }) {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -32,10 +32,10 @@ export default function ProjectPage({ project }: { project: { projectId: string;
     };
   }, [project.projectId]);
 
-  async function handleUpdate(milestoneId: string, name: string) {
+  async function handleUpdate(milestoneId: string, name: string, completed: boolean) {
     setError(null);
     try {
-      const updated = await updateMilestone({ projectId: project.projectId, milestoneId, name });
+      const updated = await updateMilestone({ projectId: project.projectId, milestoneId, name, completed });
       setMilestones((current) => current.map((milestone) => milestone.milestoneId === milestoneId ? updated : milestone));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not update milestone.");
@@ -101,7 +101,8 @@ export default function ProjectPage({ project }: { project: { projectId: string;
             <details>
               <MilestoneCard
                 name={milestone.name}
-                onUpdate={name => void handleUpdate(milestone.milestoneId, name)}
+                completed={milestone.completed ?? false}
+                onUpdate={(name, completed) => void handleUpdate(milestone.milestoneId, name, completed)}
                 onDelete={() => void handleDelete(milestone.milestoneId)}
               />
               <TaskList
