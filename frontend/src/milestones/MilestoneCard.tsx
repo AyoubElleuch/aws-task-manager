@@ -1,8 +1,9 @@
 import { useState } from "react";
 
-export default function MilestoneCard({ name, onUpdate, onDelete }: {
+export default function MilestoneCard({ name, completed, onUpdate, onDelete }: {
   name: string;
-  onUpdate: (name: string) => void;
+  completed: boolean;
+  onUpdate: (name: string, completed: boolean) => void;
   onDelete: () => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -12,6 +13,7 @@ export default function MilestoneCard({ name, onUpdate, onDelete }: {
     <>
       <summary>
         <span className="item-name">{name}</span>
+        <input type="checkbox" checked={completed} onChange={(event) => onUpdate(name, event.target.checked)} />
         {!editing && (
           <span className="milestone-actions">
             <button type="button" onClick={(event) => {
@@ -31,7 +33,7 @@ export default function MilestoneCard({ name, onUpdate, onDelete }: {
         <form onSubmit={(event) => {
           event.preventDefault();
           if (!draft.trim()) return;
-          onUpdate(draft.trim());
+          onUpdate(draft.trim(), completed);
           setEditing(false);
         }}>
           <input aria-label="Milestone name" value={draft} onChange={(event) => setDraft(event.target.value)} autoFocus required maxLength={200} />

@@ -461,6 +461,10 @@ dialog button {
 .task-card > input[type="checkbox"] {
   grid-column: 1;
   grid-row: 1;
+}
+
+.task-card > input[type="checkbox"],
+.milestones-list summary > input[type="checkbox"] {
   width: 20px;
   height: 20px;
   min-height: 0;
@@ -470,7 +474,8 @@ dialog button {
   cursor: pointer;
 }
 
-.task-card:has(> input[type="checkbox"]:checked) > .item-name {
+.task-card:has(> input[type="checkbox"]:checked) > .item-name,
+.milestones-list summary:has(> input[type="checkbox"]:checked) > .item-name {
   color: #707070;
   text-decoration: line-through;
 }
@@ -516,9 +521,10 @@ dialog button {
 }
 
 .milestones-list summary {
-  display: flex;
+  display: grid;
+  grid-template-columns: 12px 20px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: 8px 12px;
   list-style: none;
   min-height: 44px;
   padding: 12px 16px;
@@ -527,6 +533,21 @@ dialog button {
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
+}
+
+.milestones-list summary > input[type="checkbox"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.milestones-list summary > .item-name {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.milestones-list summary > .milestone-actions {
+  grid-column: 4;
+  grid-row: 1;
 }
 
 .milestones-list details[open] > summary {
@@ -541,6 +562,8 @@ dialog button {
 
 .milestones-list summary::before {
   content: "▸";
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .milestones-list details[open] > summary::before {
@@ -619,5 +642,15 @@ dialog button {
 
   .task-card > button.danger {
     grid-column: 4;
+  }
+
+  .milestones-list summary > .item-name {
+    grid-column: 3 / -1;
+  }
+
+  .milestones-list summary > .milestone-actions {
+    grid-column: 3 / -1;
+    grid-row: 2;
+    justify-self: end;
   }
 }
