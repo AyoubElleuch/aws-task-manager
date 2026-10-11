@@ -27,7 +27,7 @@ export async function createTask({ projectId, milestoneId, name }: { projectId: 
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, completed: false }),
     });
     if (!response.ok) throw new Error(`Failed to create task: ${response.statusText}`);
 
@@ -47,7 +47,7 @@ export async function deleteTask({ projectId, milestoneId, taskId }: { projectId
 
 }
 
-export async function updateTask({ projectId, milestoneId, taskId, name }: { projectId: string; milestoneId: string; taskId: string; name: string }) {
+export async function updateTask({ projectId, milestoneId, taskId, name, completed }: { projectId: string; milestoneId: string; taskId: string; name: string; completed: boolean }) {
     const token = await getToken();
     const response = await fetch(`${getTasksUrl(projectId, milestoneId)}&taskId=${taskId}`, {
         method: "PATCH",
@@ -55,7 +55,7 @@ export async function updateTask({ projectId, milestoneId, taskId, name }: { pro
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, completed }),
     });
     if (!response.ok) throw new Error(`Failed to update task: ${response.statusText}`);
 
