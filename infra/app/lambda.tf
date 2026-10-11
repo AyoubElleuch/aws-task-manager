@@ -75,6 +75,7 @@ resource "aws_lambda_function" "tasks" {
   runtime       = "nodejs22.x"
   handler       = "tasks.handler"
   role          = aws_iam_role.tasks.arn
+  timeout       = 30
 
   filename         = data.archive_file.tasks.output_path
   source_code_hash = data.archive_file.tasks.output_base64sha256

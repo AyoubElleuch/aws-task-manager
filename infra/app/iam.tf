@@ -175,7 +175,7 @@ resource "aws_iam_role_policy" "milestones_dynamodb" {
       },
       {
         Effect   = "Allow"
-        Action   = ["dynamodb:Query", "dynamodb:DeleteItem"]
+        Action   = ["dynamodb:Query", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
         Resource = aws_dynamodb_table.tasks.arn
       }
     ]
@@ -234,6 +234,11 @@ resource "aws_iam_role_policy" "tasks_dynamodb" {
         Effect   = "Allow"
         Action   = ["dynamodb:GetItem"]
         Resource = [aws_dynamodb_table.projects.arn, aws_dynamodb_table.milestones.arn]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:UpdateItem"]
+        Resource = aws_dynamodb_table.milestones.arn
       }
     ]
   })

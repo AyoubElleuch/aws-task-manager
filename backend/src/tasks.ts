@@ -9,9 +9,10 @@ import {
   DynamoDBDocumentClient,
   GetCommand,
   PutCommand,
-  QueryCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
+
+import { getTasks } from "./getTasks.js";
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -62,6 +63,18 @@ export async function handler(
   const method = event.requestContext.http.method;
   const taskId = event.queryStringParameters?.taskId;
 
+  const syncMilestone = async () => {
+    const tasks = await getTasks(db, tasksTable, milestoneKey);
+    await db.send(new UpdateCommand({
+      TableName: milestonesTable,
+      Key: { projectId, milestoneId },
+      UpdateExpression: "SET #completed = :completed",
+      ExpressionAttributeNames: { "#completed": "completed" },
+      ExpressionAttributeValues: { ":completed": tasks.length > 0 && tasks.every(task => task.completed === true) },
+      ConditionExpression: "attribute_exists(projectId)",
+    }));
+  };
+
   if (method === "GET") {
     if (taskId !== undefined) {
       if (!taskId.trim()) return json(400, { message: "Task ID is required" });
@@ -74,18 +87,7 @@ export async function handler(
       return json(200, { task: result.Item });
     }
 
-    const tasks: Record<string, unknown>[] = [];
-    let lastKey: Record<string, unknown> | undefined;
-    do {
-      const page = await db.send(new QueryCommand({
-        TableName: tasksTable,
-        KeyConditionExpression: "milestoneKey = :milestoneKey",
-        ExpressionAttributeValues: { ":milestoneKey": milestoneKey },
-        ExclusiveStartKey: lastKey,
-      }));
-      tasks.push(...(page.Items ?? []));
-      lastKey = page.LastEvaluatedKey;
-    } while (lastKey);
+    const tasks = await getTasks(db, tasksTable, milestoneKey);
     return json(200, { tasks });
   }
 
@@ -127,6 +129,7 @@ export async function handler(
         }
         throw error;
       }
+      await syncMilestone();
       return json(201, task);
     }
 
@@ -140,6 +143,8 @@ export async function handler(
         ConditionExpression: "attribute_exists(milestoneKey) AND attribute_exists(taskId)",
         ReturnValues: "ALL_NEW",
       }));
+
+      await syncMilestone();
       return json(200, { task: result.Attributes });
     } catch (error) {
       if (error instanceof ConditionalCheckFailedException) {
@@ -157,6 +162,7 @@ export async function handler(
         Key: { milestoneKey, taskId },
         ConditionExpression: "attribute_exists(milestoneKey) AND attribute_exists(taskId)",
       }));
+      await syncMilestone();
       return json(200, { message: "Task deleted" });
     } catch (error) {
       if (error instanceof ConditionalCheckFailedException) {
