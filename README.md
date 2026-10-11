@@ -10,15 +10,13 @@ I wanted to build this myself, without using AI to generate the project. I know 
 
 I wrote almost all the functions myself, using my own knowledge and a lot of research. I spent plenty of time searching online, reading documentation, and adapting examples from websites. Some configuration and repeated code came from those examples. I looked things up as I needed them and reused standard patterns where it made sense.
 
-To be clear, I did have Copilot in VS Code. It helped with autocomplete and repetitive edits, like copying an existing API pattern and changing the names. Its attempts at writing new functions weren't useful enough for me to rely on, so I wrote those myself. It saved me some typing, but I still did the implementation.
+Since the last version of this README, I've used Copilot autocomplete more for small additions, especially tests. Almost all the test code was autocompleted by Copilot, then reviewed and tested by me. I still write the vast majority of the application code myself and check suggestions because they can be wrong.
 
-I also handled the AWS setup, Terraform, CI/CD pipelines, and pull requests myself, without AI help. This is my first public Terraform project, though I've used Terraform in private projects before.
+I'm more comfortable with autocomplete now that I've built the project's foundation myself. I handled the original AWS setup, Terraform, CI/CD pipelines, and pull requests without AI help. This is my first public Terraform project, though I've used Terraform privately before.
 
 AI wrote most of this README and the other documentation using my notes and the code. I wrote the content of the technical notes myself, including the choices, reasoning, costs, and trade-offs. AI helped improve their wording and formatting. I review all the documentation to make sure it matches what I built.
 
 Some parts were fun. Some were repetitive and honestly a bit boring. I worked pretty intensively to finish it quickly, and it felt good to put the pieces together myself.
-
-AI would definitely have made it faster. I plan to use it in future projects and spend more of my time reviewing the changes. For this one, I wanted the practice and the confidence that comes with doing the work yourself.
 
 If you're looking at this as a recruiter or interviewer, feel free to ask me about the code, infrastructure, and decisions. I won't remember every line of configuration, but I'm happy to walk through what I built and why.
 
