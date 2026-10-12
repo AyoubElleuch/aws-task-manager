@@ -15,25 +15,6 @@ resource "aws_iam_role" "health" {
   })
 }
 
-resource "aws_iam_role_policy" "health_logs" {
-  name = "write-health-logs"
-  role = aws_iam_role.health.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Effect   = "Allow"
-        Resource = "${trimsuffix(aws_cloudwatch_log_group.health.arn, ":*")}:log-stream:*"
-      }
-    ]
-  })
-}
-
 resource "aws_iam_role" "me" {
   name = "aws-task-manager-me"
 
@@ -46,25 +27,6 @@ resource "aws_iam_role" "me" {
         Principal = {
           Service = "lambda.amazonaws.com"
         }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "me_logs" {
-  name = "write-me-logs"
-  role = aws_iam_role.me.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Effect   = "Allow"
-        Resource = "${trimsuffix(aws_cloudwatch_log_group.me.arn, ":*")}:log-stream:*"
       }
     ]
   })
@@ -85,41 +47,6 @@ resource "aws_iam_role" "projects" {
   })
 }
 
-resource "aws_iam_role_policy" "projects_logs" {
-  name = "write-projects-logs"
-  role = aws_iam_role.projects.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-      Resource = "${trimsuffix(aws_cloudwatch_log_group.projects.arn, ":*")}:log-stream:*"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "projects_dynamodb" {
-  name = "projects-table-access"
-  role = aws_iam_role.projects.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
-        Resource = aws_dynamodb_table.projects.arn
-      },
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:Query", "dynamodb:DeleteItem"]
-        Resource = [aws_dynamodb_table.milestones.arn, aws_dynamodb_table.tasks.arn]
-      }
-    ]
-  })
-}
-
 resource "aws_iam_role" "milestones" {
   name = "aws-task-manager-milestones"
 
@@ -137,51 +64,6 @@ resource "aws_iam_role" "milestones" {
   })
 }
 
-resource "aws_iam_role_policy" "milestones_logs" {
-  name = "write-milestones-logs"
-  role = aws_iam_role.milestones.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Effect   = "Allow"
-        Resource = "${trimsuffix(aws_cloudwatch_log_group.milestones.arn, ":*")}:log-stream:*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "milestones_dynamodb" {
-  name = "milestones-table-access"
-  role = aws_iam_role.milestones.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
-        Resource = aws_dynamodb_table.milestones.arn
-      },
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:GetItem"]
-        Resource = aws_dynamodb_table.projects.arn
-      },
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:Query", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
-        Resource = aws_dynamodb_table.tasks.arn
-      }
-    ]
-  })
-}
-
 resource "aws_iam_role" "tasks" {
   name = "aws-task-manager-tasks"
 
@@ -194,51 +76,6 @@ resource "aws_iam_role" "tasks" {
         Principal = {
           Service = "lambda.amazonaws.com"
         }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "tasks_logs" {
-  name = "write-tasks-logs"
-  role = aws_iam_role.tasks.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Effect   = "Allow"
-        Resource = "${trimsuffix(aws_cloudwatch_log_group.tasks.arn, ":*")}:log-stream:*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "tasks_dynamodb" {
-  name = "tasks-table-access"
-  role = aws_iam_role.tasks.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
-        Resource = aws_dynamodb_table.tasks.arn
-      },
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:GetItem"]
-        Resource = [aws_dynamodb_table.projects.arn, aws_dynamodb_table.milestones.arn]
-      },
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:UpdateItem"]
-        Resource = aws_dynamodb_table.milestones.arn
       }
     ]
   })
