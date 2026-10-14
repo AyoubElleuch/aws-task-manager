@@ -1,0 +1,4 @@
+# Copy to custom-domain.tfvars (ignored by Git) and replace the certificate ARN.
+# The certificate must be issued in us-east-1 and cover this exact hostname.
+domain_name         = "taskmanager.mohamedayoubeleuch.com"
+acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
