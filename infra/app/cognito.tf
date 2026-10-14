@@ -54,15 +54,8 @@ resource "aws_cognito_user_pool_client" "frontend" {
     refresh_token = "days"
   }
 
-  callback_urls = [
-    "http://localhost:3000/callback",
-    "https://${aws_cloudfront_distribution.frontend.domain_name}/callback"
-  ]
-
-  logout_urls = [
-    "http://localhost:3000/",
-    "https://${aws_cloudfront_distribution.frontend.domain_name}/"
-  ]
+  callback_urls = [for origin in local.frontend_origins : "${origin}/callback"]
+  logout_urls   = [for origin in local.frontend_origins : "${origin}/"]
 
   explicit_auth_flows = [
     "ALLOW_USER_SRP_AUTH",

@@ -10,7 +10,12 @@ output "frontend_bucket_name" {
 
 output "website_url" {
   description = "Public HTTPS URL of the frontend"
-  value       = "https://${aws_cloudfront_distribution.frontend.domain_name}"
+  value       = local.frontend_url
+}
+
+output "cloudfront_domain_name" {
+  description = "CloudFront hostname to use as the custom-domain DNS CNAME target"
+  value       = aws_cloudfront_distribution.frontend.domain_name
 }
 
 output "frontend_distribution_id" {
