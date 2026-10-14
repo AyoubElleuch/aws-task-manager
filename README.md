@@ -1,28 +1,96 @@
 # AWS Task Manager
 
-A work-in-progress task manager for projects, milestones, and tasks, showcasing my AWS, Terraform, and CI/CD skills first and full-stack development second.
+A serverless AWS reference MVP for organizing projects, milestones, and tasks. It combines a React and TypeScript frontend with Terraform infrastructure as code, Cognito authentication, CloudFront delivery, and GitHub Actions CI/CD.
 
-[Live website](https://dlwxz7gig68tc.cloudfront.net/)
+[Live application](https://dlwxz7gig68tc.cloudfront.net/) · [API reference](docs/api.md) · [Setup and deployment](docs/setup.md) · [Engineering decisions](docs/technical/README.md)
 
-## Why I built it this way
+## Features
 
-I built the foundation myself without AI. For things I hadn't done before, I relied heavily on documentation and code snippets from official sources and other websites, especially for Terraform. This is my first public Terraform project, following private use.
+- Email sign-up and verification, sign-in, sign-out, and password recovery.
+- Create, rename, and delete projects, milestones, and tasks.
+- Keep task and milestone completion in sync.
 
-With that foundation built, I now use Copilot autocomplete more comfortably for small additions and almost all tests, which I review and test. I still write most application code and check suggestions for errors.
+Each account manages its own projects. See the [product scope](docs/product.md) for completion rules and supported workflows.
 
-AI wrote most documentation, including this README, from my notes and code. The technical notes' choices, reasoning, costs, and trade-offs are mine. AI refined their wording and formatting. I check all documentation against what I built.
+## Architecture
 
-I worked intensively to finish quickly. Some parts were fun, others repetitive or boring. Building it myself was rewarding.
+CloudFront serves the frontend from private S3 storage. Cognito authenticates users, and API Gateway routes requests to Lambda handlers backed by DynamoDB. The backend runs in `us-east-1`; Terraform defines the application in [`infra/app`](infra/app).
 
-If you're looking at this as a recruiter or interviewer, feel free to ask me about the code, infrastructure, and decisions. I won't remember every line of configuration, but I'm happy to walk through what I built and why.
+```mermaid
+flowchart TD
+    Browser["React frontend"] --> CloudFront
+    CloudFront -->|"Signed origin access"| S3["Private S3 bucket"]
+    Browser -->|"Sign in"| Cognito
+    Browser -->|"API requests"| API["API Gateway HTTP API"]
+    Cognito -.->|"JWT issuer"| API
+    API --> App["Lambda: projects, milestones, tasks"]
+    API --> Support["Lambda: health, me"]
+    App --> DynamoDB["DynamoDB: projects, milestones, tasks"]
+    App --> Logs["CloudWatch Logs"]
+    Support --> Logs
+```
 
-## What's next
+`/health` is public. Identity, project, milestone, and task routes require a valid Cognito JWT.
 
-Next, I'll add collaboration so people can work together, building it step by step.
+Terraform bootstrap resources in [`infra/bootstrap`](infra/bootstrap) provide remote state and the GitHub deployment role:
 
-## More details
+```mermaid
+flowchart LR
+    Actions["GitHub Actions"] -->|"OIDC"| Role["AWS deployment role"]
+    Role --> Terraform["App Terraform"]
+    Terraform --> App["App infrastructure"]
+    Terraform --> State["S3 state and locking"]
+```
 
-- [What the app does and what's still missing](docs/product.md)
-- [API](docs/api.md)
-- [Setup and deployment](docs/setup.md)
-- [Technical decisions and trade-offs](docs/technical/README.md)
+## Engineering highlights
+
+- **Private hosting:** S3 blocks public access. CloudFront uses signed origin requests and a bucket policy scoped to its distribution. Viewers use HTTPS, and client-side routes fall back to `index.html`.
+- **Ownership enforcement:** Handlers derive the user ID from the verified JWT `sub` claim. Project keys include that ID, and child operations check project ownership before accessing milestones or tasks.
+- **Data access:** Conditional writes detect missing records. Task queries handle pagination, parent deletions remove child records, and task changes recalculate milestone completion.
+- **Repeatable delivery:** Terraform separates app and bootstrap state in a versioned S3 bucket with lockfiles. GitHub Actions uses temporary credentials through OIDC. Each Lambda has its own execution role and CloudWatch log group with 14-day retention.
+
+## Local development
+
+Use Node.js 22 and Terraform 1.11 or newer. Local development connects to an existing AWS API and Cognito deployment.
+
+Create `frontend/.env.local` using the Terraform outputs from `infra/app`:
+
+```dotenv
+VITE_COGNITO_USER_POOL_ID=your-user-pool-id
+VITE_COGNITO_USER_POOL_CLIENT_ID=your-user-pool-client-id
+VITE_API_BASE_URL=https://your-api-id.execute-api.us-east-1.amazonaws.com
+```
+
+Start the frontend:
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Validation and CI/CD
+
+Run these checks in both `frontend/` and `backend/`:
+
+```sh
+npm ci
+npm run lint
+npm test
+npm run build
+```
+
+Vitest tests mock authentication and AWS SDK calls. Terraform tests check domain configuration using mocked providers. The [setup guide](docs/setup.md#checks) includes infrastructure validation commands.
+
+| Workflow | Trigger | Purpose |
+| --- | --- | --- |
+| [CI](.github/workflows/ci.yml) | Pushes and pull requests to `dev` and `main` | Lint, test, and build both applications; check Terraform and domain configuration. |
+| [Deploy app](.github/workflows/deploy-app.yml) | Manual dispatch on `main` | Build Lambda packages, apply Terraform, build and upload the frontend, and invalidate CloudFront. |
+
+## Custom domain
+
+Set `domain_name` and `acm_certificate_arn` together to enable a custom frontend hostname. Terraform configures CloudFront HTTPS, API CORS, and Cognito callback/logout URLs. Both inputs are optional; leaving them empty retains the CloudFront address.
+
+Follow the [Hostinger setup guide](docs/setup.md#custom-domain-with-hostinger) to configure `taskmanager.mohamedayoubeleuch.com`, validate its certificate, and deploy the change.

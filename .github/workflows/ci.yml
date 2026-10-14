@@ -38,3 +38,14 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.14.6"
+          terraform_wrapper: false
+      - name: Check Terraform and custom-domain configuration
+        working-directory: infra/app
+        run: |
+          terraform fmt -check -recursive
+          terraform init -backend=false -lockfile=readonly
+          terraform validate
+          terraform test

@@ -10,6 +10,10 @@ permissions:
 concurrency:
   group: app-terraform-deploy
 
+env:
+  TF_VAR_domain_name: ${{ vars.APP_DOMAIN_NAME }}
+  TF_VAR_acm_certificate_arn: ${{ vars.APP_ACM_CERTIFICATE_ARN }}
+
 jobs:
   deploy:
     if: github.ref == 'refs/heads/main'
