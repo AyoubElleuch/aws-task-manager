@@ -7,7 +7,7 @@ locals {
   me_lambda_arn       = "arn:aws:lambda:us-east-1:${data.aws_caller_identity.current.account_id}:function:aws-task-manager-me"
   me_log_arn          = "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/aws-task-manager-me"
   dynamodb_table_arns = [
-    for table_name in ["users", "projects", "milestones", "tasks"] :
+    for table_name in ["users", "projects", "milestones", "tasks", "project-members", "project-invitations"] :
     "arn:aws:dynamodb:us-east-1:${data.aws_caller_identity.current.account_id}:table/aws-task-manager-${table_name}"
   ]
   cognito_pool_arn      = "arn:aws:cognito-idp:us-east-1:${data.aws_caller_identity.current.account_id}:userpool/*"
@@ -139,6 +139,12 @@ resource "aws_iam_role_policy" "github_app_deploy" {
           "dynamodb:UntagResource"
         ]
         Resource = local.dynamodb_table_arns
+      },
+      {
+        Sid      = "ManageProjectInvitationExpiry"
+        Effect   = "Allow"
+        Action   = ["dynamodb:UpdateTimeToLive"]
+        Resource = "arn:aws:dynamodb:us-east-1:${data.aws_caller_identity.current.account_id}:table/aws-task-manager-project-invitations"
       },
       {
         Sid      = "CreateAppCognitoPool"
