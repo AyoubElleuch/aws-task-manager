@@ -113,7 +113,10 @@ export async function handler(
     }
     const name = input.name.trim();
 
-    const { completed } = input as { name: string; completed: boolean };
+    if (!("completed" in input) || typeof input.completed !== "boolean") {
+      return json(400, { message: "Completed must be a boolean" });
+    }
+    const completed = input.completed;
 
     if (method === "POST") {
       const task = { milestoneKey, taskId: randomUUID(), projectId, milestoneId, name, completed };
