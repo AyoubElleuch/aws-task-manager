@@ -190,3 +190,17 @@ test("DELETE keeps the milestone if task cleanup fails", async () => {
     input: { TableName: "test-tasks", Key: { milestoneKey: "project-1#milestone-1", taskId: "task-1" } },
   });
 });
+
+for (const method of ["POST", "PATCH"]) {
+  test.each([undefined, null, "false", "true", 0, 1, {}, []])(
+    method + " rejects a non-boolean completed value: %j",
+    async (completed) => {
+      mockDb({ Item: project });
+      const body = { name: "Write spec", completed };
+      const response = await handler(event(method, "project-1", "milestone-1", JSON.stringify(body)));
+      expect(response.statusCode).toBe(400);
+      expect(JSON.parse(response.body ?? "")).toEqual({ message: "Completed must be a boolean" });
+      expect(send).toHaveBeenCalledTimes(1);
+    },
+  );
+}

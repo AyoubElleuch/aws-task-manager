@@ -46,6 +46,8 @@ For tasks and milestones, both `POST` and `PATCH` include a boolean `completed` 
 {"name":"Write the README","completed":false}
 ```
 
+Task and milestone requests with a missing or non-boolean `completed` value return `400` before any mutation.
+
 The frontend creates tasks and milestones with `completed: false`. To rename one without changing its own completion value, send its current `completed` value along with the new name.
 
 Send `Content-Type: application/json`. Names are trimmed and can't be empty. The API generates IDs when creating items.

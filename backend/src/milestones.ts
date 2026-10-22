@@ -101,7 +101,10 @@ export async function handler(
     }
     const name = input.name.trim();
 
-    const { completed } = input as { name: string; completed: boolean };
+    if (!("completed" in input) || typeof input.completed !== "boolean") {
+      return json(400, { message: "Completed must be a boolean" });
+    }
+    const completed = input.completed;
 
     if (method === "POST") {
       const milestone = { projectId, milestoneId: randomUUID(), name, completed };
@@ -134,7 +137,7 @@ export async function handler(
 
         const milestoneKey = `${projectId}#${milestoneId}`;
         const tasks = await getTasks(db, tasksTable, milestoneKey);
-        
+
         for (const task of tasks) {
           await db.send(new UpdateCommand({
             TableName: tasksTable,

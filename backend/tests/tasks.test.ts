@@ -181,3 +181,17 @@ test("PATCH keeps a milestone incomplete when a later task page is incomplete", 
   expect(send.mock.calls[4][0]).toMatchObject({ input: { ExclusiveStartKey: key, ConsistentRead: true } });
   expect(send.mock.calls[5][0]).toMatchObject({ input: { ExpressionAttributeValues: { ":completed": false } } });
 });
+
+for (const method of ["POST", "PATCH"]) {
+  test.each([undefined, null, "false", "true", 0, 1, {}, []])(
+    method + " rejects a non-boolean completed value: %j",
+    async (completed) => {
+      mockDb({ Item: project }, { Item: milestone });
+      const body = { name: "Write spec", completed };
+      const response = await handler(event(method, "task-1", JSON.stringify(body)));
+      expect(response.statusCode).toBe(400);
+      expect(JSON.parse(response.body ?? "")).toEqual({ message: "Completed must be a boolean" });
+      expect(send).toHaveBeenCalledTimes(2);
+    },
+  );
+}

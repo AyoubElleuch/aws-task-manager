@@ -2,7 +2,7 @@
 
 A serverless AWS reference MVP for organizing projects, milestones, and tasks. It combines a React and TypeScript frontend with Terraform infrastructure as code, Cognito authentication, CloudFront delivery, and GitHub Actions CI/CD.
 
-[Live application](https://dlwxz7gig68tc.cloudfront.net/) · [API reference](docs/api.md) · [Setup and deployment](docs/setup.md) · [Engineering decisions](docs/technical/README.md)
+[Live application](https://taskmanager.mohamedayoubeleuch.com/) · [API reference](docs/api.md) · [Setup and deployment](docs/setup.md) · [Engineering decisions](docs/technical/README.md)
 
 ## Features
 
@@ -10,7 +10,11 @@ A serverless AWS reference MVP for organizing projects, milestones, and tasks. I
 - Create, rename, and delete projects, milestones, and tasks.
 - Keep task and milestone completion in sync.
 
-Each account manages its own projects. See the [product scope](docs/product.md) for completion rules and supported workflows.
+Each account manages its own projects. Shared projects are in development and are not part of the released MVP. See the [product scope](docs/product.md) for completion rules and supported workflows.
+
+## Review the project
+
+The live app requires an account and email verification. For a quick review without signing up, start with the [portfolio screenshots and case study](https://www.mohamedayoubeleuch.com/work/aws-task-manager), then inspect [ownership checks](backend/src/tasks.ts), [API tests](backend/tests), and [Terraform](infra/app).
 
 ## Architecture
 
@@ -94,3 +98,7 @@ Vitest tests mock authentication and AWS SDK calls. Terraform tests check domain
 Set `domain_name` and `acm_certificate_arn` together to enable a custom frontend hostname. Terraform configures CloudFront HTTPS, API CORS, and Cognito callback/logout URLs. Both inputs are optional; leaving them empty retains the CloudFront address.
 
 Follow the [Hostinger setup guide](docs/setup.md#custom-domain-with-hostinger) to configure `taskmanager.mohamedayoubeleuch.com`, validate its certificate, and deploy the change.
+
+## Current limits
+
+The backend runs in one region. Task writes and milestone completion recalculation are separate operations; concurrent edits and partial failures need additional consistency work before shared editing is released. Tests use mocked AWS clients, so they do not establish production latency or concurrency guarantees.
